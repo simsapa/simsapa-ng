@@ -106,6 +106,10 @@ pub struct SearchQueryTask<'a> {
     pub dict_source_uids: Option<Vec<String>>,
     pub show_all_snippets: bool,
     pub snippet_exclude: Option<Vec<String>>,
+    pub snippet_chars_before: usize,
+    pub snippet_chars_after: usize,
+    pub snippet_all_chars_before: usize,
+    pub snippet_all_chars_after: usize,
     pub db_all_results: Vec<SearchResult>,
     pub db_query_hits_count: i64, // Use i64 for Diesel's count result
 }
@@ -163,6 +167,10 @@ impl<'a> SearchQueryTask<'a> {
             dict_source_uids: params.dict_source_uids.clone(),
             show_all_snippets: params.show_all_snippets,
             snippet_exclude: params.snippet_exclude.clone(),
+            snippet_chars_before: get_app_data().get_snippet_chars_before(),
+            snippet_chars_after: get_app_data().get_snippet_chars_after(),
+            snippet_all_chars_before: get_app_data().get_snippet_all_chars_before(),
+            snippet_all_chars_after: get_app_data().get_snippet_all_chars_after(),
             db_all_results: Vec::new(),
             db_query_hits_count: 0,
         }
@@ -377,14 +385,14 @@ impl<'a> SearchQueryTask<'a> {
     /// Creates a snippet around query terms (handles "AND").
     pub fn fragment_around_query(&self, query: &str, content: &str) -> String {
         if query.starts_with("uid:") || query.ends_with("/dpd") {
-            return self.fragment_around_text("", content, 20, 500);
+            return self.fragment_around_text("", content, self.snippet_chars_before, self.snippet_chars_after);
         }
         // Simple approach: find the first term and fragment around it.
         // FIXME: A more complex approach could try to find a fragment containing multiple terms.
         let (terms, before, after) = if query.contains(" AND ") {
             (query.split(" AND ").map(|s| s.trim()).collect::<Vec<&str>>(), 10, 50)
         } else {
-            (vec![query], 20, 500)
+            (vec![query], self.snippet_chars_before, self.snippet_chars_after)
         };
 
         // Find the first term present in the content and fragment around it
@@ -441,8 +449,7 @@ impl<'a> SearchQueryTask<'a> {
             ranges
                 .iter()
                 .map(|r| {
-                    // Use 200 for shorter results text in all-snippets mode
-                    let (window, focal) = Self::fragment_around_offset(content, r.start, r.end - r.start, 20, 200);
+                    let (window, focal) = Self::fragment_around_offset(content, r.start, r.end - r.start, self.snippet_all_chars_before, self.snippet_all_chars_after);
                     wrap_ranges(&window, &[focal])
                 })
                 .collect(),

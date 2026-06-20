@@ -1349,6 +1349,44 @@ pub mod qobject {
 
         #[qinvokable]
         fn set_render_loop_basic(self: Pin<&mut SuttaBridge>, value: bool);
+
+        // --- Snippet display settings ---
+
+        #[qinvokable]
+        fn get_snippet_chars_before(self: &SuttaBridge) -> u32;
+
+        #[qinvokable]
+        fn set_snippet_chars_before(self: Pin<&mut SuttaBridge>, value: u32);
+
+        #[qinvokable]
+        fn get_snippet_chars_after(self: &SuttaBridge) -> u32;
+
+        #[qinvokable]
+        fn set_snippet_chars_after(self: Pin<&mut SuttaBridge>, value: u32);
+
+        #[qinvokable]
+        fn get_snippet_all_chars_before(self: &SuttaBridge) -> u32;
+
+        #[qinvokable]
+        fn set_snippet_all_chars_before(self: Pin<&mut SuttaBridge>, value: u32);
+
+        #[qinvokable]
+        fn get_snippet_all_chars_after(self: &SuttaBridge) -> u32;
+
+        #[qinvokable]
+        fn set_snippet_all_chars_after(self: Pin<&mut SuttaBridge>, value: u32);
+
+        #[qinvokable]
+        fn get_item_height_use_default(self: &SuttaBridge) -> bool;
+
+        #[qinvokable]
+        fn set_item_height_use_default(self: Pin<&mut SuttaBridge>, value: bool);
+
+        #[qinvokable]
+        fn get_item_height_fixed(self: &SuttaBridge) -> u32;
+
+        #[qinvokable]
+        fn set_item_height_fixed(self: Pin<&mut SuttaBridge>, value: u32);
     }
 }
 
@@ -4898,5 +4936,55 @@ impl qobject::SuttaBridge {
 
     pub fn set_render_loop_basic(self: Pin<&mut Self>, value: bool) {
         get_app_data().set_render_loop_basic(value);
+    }
+
+    // --- Snippet display settings ---
+
+    pub fn get_snippet_chars_before(&self) -> u32 {
+        get_app_data().get_snippet_chars_before() as u32
+    }
+
+    pub fn set_snippet_chars_before(self: Pin<&mut Self>, value: u32) {
+        get_app_data().set_snippet_chars_before(value as usize);
+    }
+
+    pub fn get_snippet_chars_after(&self) -> u32 {
+        get_app_data().get_snippet_chars_after() as u32
+    }
+
+    pub fn set_snippet_chars_after(self: Pin<&mut Self>, value: u32) {
+        get_app_data().set_snippet_chars_after(value as usize);
+    }
+
+    pub fn get_snippet_all_chars_before(&self) -> u32 {
+        get_app_data().get_snippet_all_chars_before() as u32
+    }
+
+    pub fn set_snippet_all_chars_before(self: Pin<&mut Self>, value: u32) {
+        get_app_data().set_snippet_all_chars_before(value as usize);
+    }
+
+    pub fn get_snippet_all_chars_after(&self) -> u32 {
+        get_app_data().get_snippet_all_chars_after() as u32
+    }
+
+    pub fn set_snippet_all_chars_after(self: Pin<&mut Self>, value: u32) {
+        get_app_data().set_snippet_all_chars_after(value as usize);
+    }
+
+    pub fn get_item_height_use_default(&self) -> bool {
+        get_app_data().get_item_height_use_default()
+    }
+
+    pub fn set_item_height_use_default(self: Pin<&mut Self>, value: bool) {
+        get_app_data().set_item_height_use_default(value);
+    }
+
+    pub fn get_item_height_fixed(&self) -> u32 {
+        get_app_data().get_item_height_fixed() as u32
+    }
+
+    pub fn set_item_height_fixed(self: Pin<&mut Self>, value: u32) {
+        get_app_data().set_item_height_fixed(value as usize);
     }
 }

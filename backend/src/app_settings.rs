@@ -160,6 +160,27 @@ pub struct AppSettings {
     /// (`QSG_RENDER_LOOP=basic`).
     #[serde(default)]
     pub render_loop_basic: bool,
+
+    // --- Snippet display settings ---
+
+    /// Chars before the matched term in single-snippet mode
+    #[serde(default = "default_snippet_chars_before")]
+    pub snippet_chars_before: usize,
+    /// Chars after the matched term in single-snippet mode
+    #[serde(default = "default_snippet_chars_after")]
+    pub snippet_chars_after: usize,
+    /// Chars before the matched term in all-snippets mode
+    #[serde(default = "default_snippet_all_chars_before")]
+    pub snippet_all_chars_before: usize,
+    /// Chars after the matched term in all-snippets mode
+    #[serde(default = "default_snippet_all_chars_after")]
+    pub snippet_all_chars_after: usize,
+    /// Whether to use default item height (line height x 4) in search results
+    #[serde(default = "default_true")]
+    pub item_height_use_default: bool,
+    /// Fixed item height in pixels (used when item_height_use_default is false)
+    #[serde(default)]
+    pub item_height_fixed: usize,
 }
 
 fn default_true() -> bool {
@@ -169,6 +190,23 @@ fn default_true() -> bool {
 #[allow(dead_code)]
 fn default_false() -> bool {
     false
+}
+
+fn default_snippet_chars_before() -> usize {
+    30
+}
+
+fn default_snippet_chars_after() -> usize {
+    350
+}
+
+fn default_snippet_all_chars_before() -> usize {
+    30
+}
+
+// Use 200 for shorter results text in all-snippets mode
+fn default_snippet_all_chars_after() -> usize {
+    200
 }
 
 impl Default for AppSettings {
@@ -321,6 +359,12 @@ table tr td \{ text-align: left; padding: 0.1em 0.5em; }
             render_use_flat_results_background: false,
             render_disable_results_clip: false,
             render_loop_basic: false,
+            snippet_chars_before: default_snippet_chars_before(),
+            snippet_chars_after: default_snippet_chars_after(),
+            snippet_all_chars_before: default_snippet_all_chars_before(),
+            snippet_all_chars_after: default_snippet_all_chars_after(),
+            item_height_use_default: true,
+            item_height_fixed: 100,
         }
     }
 }

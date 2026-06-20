@@ -16,6 +16,8 @@ ColumnLayout {
     // SuttaBridge. Default off so QML preview / desktop are unaffected.
     property bool render_use_flat_results_background: false
     property bool render_disable_results_clip: false
+    property bool item_height_use_default: true
+    property int item_height_fixed: 0
     readonly property bool is_mobile: Qt.platform.os === "android" || Qt.platform.os === "ios"
     readonly property bool is_desktop: !root.is_mobile
     readonly property string match_bg: root.is_dark ? "#007A31" : "#F6E600"
@@ -265,7 +267,9 @@ ColumnLayout {
         orientation: ListView.Vertical
 
         readonly property int item_padding: 10
-        readonly property int item_height: root.tm1.height*4 + item_padding*2
+        readonly property int item_height: root.item_height_use_default
+            ? root.tm1.height*4 + item_padding*2
+            : root.item_height_fixed
 
         Layout.fillHeight: true
         Layout.fillWidth: true

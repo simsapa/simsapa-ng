@@ -1116,6 +1116,56 @@ Item {
         console.log("set_render_loop_basic():", value);
     }
 
+    // --- Snippet display settings ---
+
+    function get_snippet_chars_before(): int {
+        return 20;
+    }
+
+    function set_snippet_chars_before(value: int) {
+        console.log("set_snippet_chars_before():", value);
+    }
+
+    function get_snippet_chars_after(): int {
+        return 500;
+    }
+
+    function set_snippet_chars_after(value: int) {
+        console.log("set_snippet_chars_after():", value);
+    }
+
+    function get_snippet_all_chars_before(): int {
+        return 30;
+    }
+
+    function set_snippet_all_chars_before(value: int) {
+        console.log("set_snippet_all_chars_before():", value);
+    }
+
+    function get_snippet_all_chars_after(): int {
+        return 200;
+    }
+
+    function set_snippet_all_chars_after(value: int) {
+        console.log("set_snippet_all_chars_after():", value);
+    }
+
+    function get_item_height_use_default(): bool {
+        return true;
+    }
+
+    function set_item_height_use_default(value: bool) {
+        console.log("set_item_height_use_default():", value);
+    }
+
+    function get_item_height_fixed(): int {
+        return 0;
+    }
+
+    function set_item_height_fixed(value: int) {
+        console.log("set_item_height_fixed():", value);
+    }
+
     Item {
         id: dpd_lookup_data
         visible: false

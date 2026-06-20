@@ -1707,6 +1707,74 @@ impl AppData {
         self.persist_app_settings(&app_settings);
     }
 
+    // --- Snippet display settings ---
+
+    pub fn get_snippet_chars_before(&self) -> usize {
+        let app_settings = self.app_settings_cache.read().expect("Failed to read app settings");
+        app_settings.snippet_chars_before
+    }
+
+    pub fn set_snippet_chars_before(&self, value: usize) {
+        let mut app_settings = self.app_settings_cache.write().expect("Failed to write app settings");
+        app_settings.snippet_chars_before = value;
+        self.persist_app_settings(&app_settings);
+    }
+
+    pub fn get_snippet_chars_after(&self) -> usize {
+        let app_settings = self.app_settings_cache.read().expect("Failed to read app settings");
+        app_settings.snippet_chars_after
+    }
+
+    pub fn set_snippet_chars_after(&self, value: usize) {
+        let mut app_settings = self.app_settings_cache.write().expect("Failed to write app settings");
+        app_settings.snippet_chars_after = value;
+        self.persist_app_settings(&app_settings);
+    }
+
+    pub fn get_snippet_all_chars_before(&self) -> usize {
+        let app_settings = self.app_settings_cache.read().expect("Failed to read app settings");
+        app_settings.snippet_all_chars_before
+    }
+
+    pub fn set_snippet_all_chars_before(&self, value: usize) {
+        let mut app_settings = self.app_settings_cache.write().expect("Failed to write app settings");
+        app_settings.snippet_all_chars_before = value;
+        self.persist_app_settings(&app_settings);
+    }
+
+    pub fn get_snippet_all_chars_after(&self) -> usize {
+        let app_settings = self.app_settings_cache.read().expect("Failed to read app settings");
+        app_settings.snippet_all_chars_after
+    }
+
+    pub fn set_snippet_all_chars_after(&self, value: usize) {
+        let mut app_settings = self.app_settings_cache.write().expect("Failed to write app settings");
+        app_settings.snippet_all_chars_after = value;
+        self.persist_app_settings(&app_settings);
+    }
+
+    pub fn get_item_height_use_default(&self) -> bool {
+        let app_settings = self.app_settings_cache.read().expect("Failed to read app settings");
+        app_settings.item_height_use_default
+    }
+
+    pub fn set_item_height_use_default(&self, enabled: bool) {
+        let mut app_settings = self.app_settings_cache.write().expect("Failed to write app settings");
+        app_settings.item_height_use_default = enabled;
+        self.persist_app_settings(&app_settings);
+    }
+
+    pub fn get_item_height_fixed(&self) -> usize {
+        let app_settings = self.app_settings_cache.read().expect("Failed to read app settings");
+        app_settings.item_height_fixed
+    }
+
+    pub fn set_item_height_fixed(&self, value: usize) {
+        let mut app_settings = self.app_settings_cache.write().expect("Failed to write app settings");
+        app_settings.item_height_fixed = value;
+        self.persist_app_settings(&app_settings);
+    }
+
     /// Get the current keybindings as a JSON string.
     pub fn get_keybindings_json(&self) -> String {
         let app_settings = self.app_settings_cache.read().expect("Failed to read app settings");

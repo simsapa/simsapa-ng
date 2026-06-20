@@ -68,6 +68,8 @@ ApplicationWindow {
     // env-var backed toggles are applied in gui.cpp instead.
     readonly property bool render_use_flat_results_background: SuttaBridge.get_render_use_flat_results_background()
     readonly property bool render_disable_results_clip: SuttaBridge.get_render_disable_results_clip()
+    readonly property bool item_height_use_default: SuttaBridge.get_item_height_use_default()
+    readonly property int item_height_fixed: SuttaBridge.get_item_height_fixed()
 
     property bool is_loading: false
     property bool has_query_error: false
@@ -3490,6 +3492,8 @@ ${query_text}`;
                                 is_dark: root.is_dark
                                 render_use_flat_results_background: root.render_use_flat_results_background
                                 render_disable_results_clip: root.render_disable_results_clip
+                                item_height_use_default: root.item_height_use_default
+                                item_height_fixed: root.item_height_fixed
                                 new_results_page_fn: root.new_results_page
                                 // Cleaned, comma-joined exclude terms so an
                                 // all-excluded page can name the active filter.

@@ -384,12 +384,16 @@ impl FulltextSearcher {
         let expand = filters.show_all_snippets
             && matches!(index_type, IndexType::Sutta | IndexType::Library);
 
+        let (all_chars_before, all_chars_after) = match crate::try_get_app_data() {
+            Some(app_data) => (app_data.get_snippet_all_chars_before(), app_data.get_snippet_all_chars_after()),
+            None => (30, 200),
+        };
         let results: Vec<SearchResult> = if expand {
             let mut out: Vec<SearchResult> = Vec::with_capacity(sliced.len());
             for (_score, lang, addr, base) in sliced {
                 match indexes.get(&lang) {
                     Some((index, reader)) => {
-                        match Self::expand_doc_occurrences(query_text, &lang, index, reader, addr, &base) {
+                        match Self::expand_doc_occurrences(query_text, &lang, index, reader, addr, &base, all_chars_before, all_chars_after) {
                             Ok(mut rows) => out.append(&mut rows),
                             Err(e) => {
                                 warn(&format!("Snippet expansion error for lang {}: {}", lang, e));
@@ -466,6 +470,8 @@ impl FulltextSearcher {
         reader: &IndexReader,
         doc_address: tantivy::DocAddress,
         base: &SearchResult,
+        all_chars_before: usize,
+        all_chars_after: usize,
     ) -> Result<Vec<SearchResult>> {
         let searcher = reader.searcher();
         let schema = index.schema();
@@ -482,8 +488,7 @@ impl FulltextSearcher {
 
         let mut out: Vec<SearchResult> = Vec::with_capacity(ranges.len());
         for r in ranges {
-            // Use 200 for shorter results text in all-snippets mode
-            let (window, focal) = SearchQueryTask::fragment_around_offset(&content, r.start, r.end - r.start, 20, 200);
+            let (window, focal) = SearchQueryTask::fragment_around_offset(&content, r.start, r.end - r.start, all_chars_before, all_chars_after);
             let mut row = base.clone();
             row.snippet = wrap_ranges(&window, &[focal]);
             row.is_snippet = true;

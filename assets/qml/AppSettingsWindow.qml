@@ -698,6 +698,178 @@ ApplicationWindow {
                             Layout.fillWidth: true
                         }
 
+                        // Snippet Preview section
+                        Label {
+                            text: "Snippet Preview"
+                            font.pointSize: root.pointSize + 1
+                            font.bold: true
+                            Layout.topMargin: 10
+                        }
+
+                        Label {
+                            text: "Single-Snippet Mode"
+                            font.pointSize: root.pointSize
+                            font.bold: true
+                        }
+
+                        Flow {
+                            Layout.fillWidth: true
+                            spacing: 10
+
+                            Row {
+                                spacing: 6
+
+                                Label {
+                                    text: "Chars before term:"
+                                    font.pointSize: root.pointSize
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+
+                                SpinBox {
+                                    id: snippet_chars_before_spin
+                                    from: 0
+                                    to: 1000
+                                    value: 30
+                                    editable: true
+                                    font.pointSize: root.pointSize
+                                    onValueModified: {
+                                        SuttaBridge.set_snippet_chars_before(value);
+                                    }
+                                }
+                            }
+
+                            Row {
+                                spacing: 6
+
+                                Label {
+                                    text: "Chars after term:"
+                                    font.pointSize: root.pointSize
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+
+                                SpinBox {
+                                    id: snippet_chars_after_spin
+                                    from: 0
+                                    to: 1000
+                                    value: 350
+                                    editable: true
+                                    font.pointSize: root.pointSize
+                                    onValueModified: {
+                                        SuttaBridge.set_snippet_chars_after(value);
+                                    }
+                                }
+                            }
+                        }
+
+                        Label {
+                            text: "All-Snippets Mode (Show All Snippets)"
+                            font.pointSize: root.pointSize
+                            font.bold: true
+                        }
+
+                        Flow {
+                            Layout.fillWidth: true
+                            spacing: 10
+
+                            Row {
+                                spacing: 6
+
+                                Label {
+                                    text: "Chars before term:"
+                                    font.pointSize: root.pointSize
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+
+                                SpinBox {
+                                    id: snippet_all_chars_before_spin
+                                    from: 0
+                                    to: 1000
+                                    value: 30
+                                    editable: true
+                                    font.pointSize: root.pointSize
+                                    onValueModified: {
+                                        SuttaBridge.set_snippet_all_chars_before(value);
+                                    }
+                                }
+                            }
+
+                            Row {
+                                spacing: 6
+
+                                Label {
+                                    text: "Chars after term:"
+                                    font.pointSize: root.pointSize
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+
+                                SpinBox {
+                                    id: snippet_all_chars_after_spin
+                                    from: 0
+                                    to: 1000
+                                    value: 200
+                                    editable: true
+                                    font.pointSize: root.pointSize
+                                    onValueModified: {
+                                        SuttaBridge.set_snippet_all_chars_after(value);
+                                    }
+                                }
+                            }
+                        }
+
+                        Label {
+                            text: "Result Item Height"
+                            font.pointSize: root.pointSize + 1
+                            font.bold: true
+                            Layout.topMargin: 10
+                        }
+
+                        Flow {
+                            Layout.fillWidth: true
+                            spacing: 10
+
+                            CheckBox {
+                                id: item_height_default_checkbox
+                                text: "Use line height x 4"
+                                font.pointSize: root.pointSize
+                                checked: true
+                                onCheckedChanged: {
+                                    SuttaBridge.set_item_height_use_default(checked);
+                                }
+                            }
+
+                            Row {
+                                spacing: 6
+
+                                Label {
+                                    text: "Fixed value:"
+                                    font.pointSize: root.pointSize
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    opacity: item_height_default_checkbox.checked ? 0.5 : 1.0
+                                }
+
+                                SpinBox {
+                                    id: item_height_fixed_spin
+                                    from: 20
+                                    to: 1000
+                                    value: 100
+                                    editable: true
+                                    enabled: !item_height_default_checkbox.checked
+                                    opacity: item_height_default_checkbox.checked ? 0.5 : 1.0
+                                    font.pointSize: root.pointSize
+                                    onValueModified: {
+                                        SuttaBridge.set_item_height_fixed(value);
+                                    }
+                                }
+                            }
+                        }
+
+                        Label {
+                            text: "Item height settings only take effect after restarting the app."
+                            font.pointSize: root.pointSize - 2
+                            wrapMode: Text.WordWrap
+                            Layout.fillWidth: true
+                        }
+
                         Item { Layout.fillHeight: true }
                     }
                 }
@@ -1038,6 +1210,14 @@ ApplicationWindow {
         // Load initial state for Find tab settings
         search_as_you_type_checkbox.checked = SuttaBridge.get_search_as_you_type();
         open_find_in_results_checkbox.checked = SuttaBridge.get_open_find_in_sutta_results();
+
+        // Snippet display settings
+        snippet_chars_before_spin.value = SuttaBridge.get_snippet_chars_before();
+        snippet_chars_after_spin.value = SuttaBridge.get_snippet_chars_after();
+        snippet_all_chars_before_spin.value = SuttaBridge.get_snippet_all_chars_before();
+        snippet_all_chars_after_spin.value = SuttaBridge.get_snippet_all_chars_after();
+        item_height_default_checkbox.checked = SuttaBridge.get_item_height_use_default();
+        item_height_fixed_spin.value = SuttaBridge.get_item_height_fixed();
 
         // Load keybindings
         root.load_keybindings();
