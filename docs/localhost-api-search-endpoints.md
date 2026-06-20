@@ -176,38 +176,166 @@ readers.
 - `run_suttas_search(request, dbm, fallback_mode)` — shared body for the two
   named Suttas routes: reference → `UidMatch` auto-detect, else `fallback_mode`.
 
-## 10. Verification (curl)
+## 10. The port (default 4848)
 
-The Rocket app is launched via FFI (no standalone route test harness); verify
-with `make build -B` plus manual curl against a running app. Examples (replace
-`<port>` with the running `api_port`):
+The server binds to `127.0.0.1:<api_port>`. The port is resolved at startup
+(`backend/src/lib.rs`):
+
+- **Default `4848`.** If the `API_PORT` env var is set to a valid, free port,
+  that is used; otherwise the app scans upward from `4848` for the first free
+  port (so a second running instance lands on `4849`, etc.).
+- The **actual** port chosen is written to `api-port.txt` in `SIMSAPA_DIR`
+  (`<SIMSAPA_DIR>/api-port.txt`, single integer, no newline). A client that
+  cannot assume `4848` should read this file to discover the live port.
+
+The examples below use `4848`; substitute the value from `api-port.txt` if your
+instance differs. A client can confirm the server is up with `GET /` (returns a
+small HTML page) or fetch the filter option lists with
+`GET /sutta_and_dict_search_options`:
 
 ```sh
-# Fulltext, per-occurrence snippets
-curl -s -X POST localhost:<port>/suttas_fulltext_search \
+PORT=$(cat "$SIMSAPA_DIR/api-port.txt")   # or just use 4848
+
+# Liveness check
+curl -s "localhost:$PORT/"
+
+# Available filter values: sutta_languages[], dict_languages[], dict_sources[]
+curl -s "localhost:$PORT/sutta_and_dict_search_options"
+```
+
+## 11. Response fields (`SearchResult`)
+
+Each element of `results` is a `SearchResult` (`backend/src/types.rs`); the
+fields most clients use:
+
+| Field | Meaning |
+|-------|---------|
+| `uid` | Stable id of the row, e.g. `sn56.11/pli/ms`, `dhamma/dpd`, `42/dpd`. Use it with the navigation routes (`GET /suttas/<uid>`, `GET /words/<uid>.json`) or to re-query via `Uid Match` / `DPD ID Match`. |
+| `schema_name` | Source DB: `appdata`, `dictionaries`, or `dpd`. |
+| `table_name` | `suttas`, `dict_words`, `dpd_headwords`, `dpd_roots`, … |
+| `title` | Display title (sutta title or dictionary headword). |
+| `sutta_ref` | Reference like `SN 56.11` (suttas only). |
+| `nikaya`, `author`, `lang` | Collection / author / language code (`pli`, `en`, …). |
+| `snippet` | HTML snippet with producer-owned, non-nested `<span class='match'>` highlight spans (see §1). |
+| `score`, `rank` | Relevance score / rank where the mode produces them. |
+| `is_snippet` | `true` for an expanded per-occurrence row (only when `show_all_snippets` was set); group rows by `uid` to dedupe headers. |
+
+Dictionary responses additionally carry the top-level `deconstructor` array (see
+§7) when the DPD deconstructor split the query.
+
+## 12. Usage examples (curl)
+
+The Rocket app is launched via FFI (no standalone route test harness); verify
+with `make build -B` plus manual curl against a running app. All examples assume
+`PORT=4848`.
+
+### 12.1 Searching the suttas
+
+```sh
+# Fulltext (tantivy, stemmed) — the default sutta search.
+# Use the named route, or POST /search with "search_area":"Suttas".
+curl -s -X POST "localhost:$PORT/suttas_fulltext_search" \
+  -H 'Content-Type: application/json' \
+  -d '{"query_text":"mindfulness of breathing"}'
+
+# Fulltext with per-occurrence snippets (one result row per match in a sutta).
+curl -s -X POST "localhost:$PORT/suttas_fulltext_search" \
   -H 'Content-Type: application/json' \
   -d '{"query_text":"pajahati","show_all_snippets":true}'
 
-# Contains (literal): pajahitvā NOT highlighted for query pajahati
-curl -s -X POST localhost:<port>/suttas_contains_search \
+# Contains (literal substring): "pajahitvā" is NOT highlighted for "pajahati".
+curl -s -X POST "localhost:$PORT/suttas_contains_search" \
   -H 'Content-Type: application/json' -d '{"query_text":"pajahati"}'
 
-# General /search — explicit mode + area, pagination, exclusion
-curl -s -X POST localhost:<port>/search \
-  -H 'Content-Type: application/json' \
-  -d '{"query_text":"pajahati","mode":"Fulltext Match","search_area":"Suttas","page_num":0,"page_len":10,"show_all_snippets":true,"snippet_exclude":["upādiyati"]}'
+# By sutta reference → auto-detected as Uid Match on the named routes.
+# Many reference spellings work: "sn56.11", "SN 56.11", "mn44", "dhp182".
+curl -s -X POST "localhost:$PORT/suttas_fulltext_search" \
+  -H 'Content-Type: application/json' -d '{"query_text":"sn56.11"}'
 
-# Dictionary via /search (default mode Combined → DpdLookup + deconstructor)
-curl -s -X POST localhost:<port>/search \
+# Language filter: only English suttas (include=true keeps only "en";
+# set suttas_lang_include=false to EXCLUDE "en"). "Language"/"" = no filter.
+curl -s -X POST "localhost:$PORT/suttas_fulltext_search" \
+  -H 'Content-Type: application/json' \
+  -d '{"query_text":"suffering","suttas_lang":"en","suttas_lang_include":true}'
+
+# Pagination + snippet exclusion (drop snippets containing "upādiyati").
+# snippet_exclude is a JSON array, not a CSV string.
+curl -s -X POST "localhost:$PORT/search" \
+  -H 'Content-Type: application/json' \
+  -d '{"query_text":"pajahati","search_area":"Suttas","page_num":1,"page_len":10,"snippet_exclude":["upādiyati"]}'
+
+# Explicit mode via /search (strict — no reference→Uid override here):
+#   "Title Match"  — match sutta titles only
+#   "Uid Match"    — exact uid lookup (pass the uid as query_text)
+#   "RegEx Match"  — regular-expression match over the text
+curl -s -X POST "localhost:$PORT/search" \
+  -H 'Content-Type: application/json' \
+  -d '{"query_text":"satipaṭṭhāna","mode":"Title Match","search_area":"Suttas"}'
+
+curl -s -X POST "localhost:$PORT/search" \
+  -H 'Content-Type: application/json' \
+  -d '{"query_text":"sn56.11/pli/ms","mode":"Uid Match","search_area":"Suttas"}'
+```
+
+> Searching the **Library** (imported EPUB/PDF/HTML books) works the same way:
+> send `"search_area":"Library"` to `POST /search`. It honours the same
+> `suttas_lang*`, pagination, and snippet options as Suttas.
+
+### 12.2 Searching the dictionary
+
+```sh
+# DPD general lookup (the dictionary default). /dict_combined_search runs
+# DpdLookup (headword/lemma search) and also returns the deconstructor split.
+curl -s -X POST "localhost:$PORT/dict_combined_search" \
+  -H 'Content-Type: application/json' -d '{"query_text":"dhamma"}'
+
+# Same via the general route (default mode Combined → DpdLookup + deconstructor).
+curl -s -X POST "localhost:$PORT/search" \
   -H 'Content-Type: application/json' \
   -d '{"query_text":"dhamma","search_area":"Dictionary"}'
 
-# Reference query on a named route → UidMatch
-curl -s -X POST localhost:<port>/suttas_fulltext_search \
-  -H 'Content-Type: application/json' -d '{"query_text":"sn56.11"}'
+# A compound word — the deconstructor array shows the split (e.g. ["buddha","dhamma"]).
+curl -s -X POST "localhost:$PORT/dict_combined_search" \
+  -H 'Content-Type: application/json' -d '{"query_text":"buddhadhamma"}'
 
-# Unknown mode → HTTP 400
-curl -s -o /dev/null -w '%{http_code}\n' -X POST localhost:<port>/search \
+# By dictionary word UID → auto-detected as Uid Match.
+# Patterns like "dhamma 1.01", "dhamma 1.01/dpd", or a bare "<n>/dpd" id.
+curl -s -X POST "localhost:$PORT/dict_combined_search" \
+  -H 'Content-Type: application/json' -d '{"query_text":"dhamma 1.01/dpd"}'
+
+# By DPD headword numeric id, explicitly via /search:
+#   "DPD ID Match"  — query_text is the numeric DPD headword id
+curl -s -X POST "localhost:$PORT/search" \
+  -H 'Content-Type: application/json' \
+  -d '{"query_text":"34626","mode":"DPD ID Match","search_area":"Dictionary"}'
+
+# Headword Match — match dictionary headwords across all dictionaries (FTS).
+curl -s -X POST "localhost:$PORT/search" \
+  -H 'Content-Type: application/json' \
+  -d '{"query_text":"nibbāna","mode":"Headword Match","search_area":"Dictionary"}'
+
+# Filter by language and/or source dictionary. dict_lang / dict_dict accept the
+# values returned by /sutta_and_dict_search_options; *_include=false EXCLUDES.
+# "Language"/"Dictionary"/"" mean "no filter".
+curl -s -X POST "localhost:$PORT/dict_combined_search" \
+  -H 'Content-Type: application/json' \
+  -d '{"query_text":"dhamma","dict_lang":"en","dict_lang_include":true,"dict_dict":"PTS","dict_dict_include":true}'
+
+# After a search, fetch the full word entry as JSON (for glossary export):
+curl -s "localhost:$PORT/words/dhamma%201.01%2Fdpd.json"
+```
+
+### 12.3 Error handling
+
+```sh
+# Unknown mode (or unknown search_area) on /search → HTTP 400.
+curl -s -o /dev/null -w '%{http_code}\n' -X POST "localhost:$PORT/search" \
   -H 'Content-Type: application/json' \
   -d '{"query_text":"x","mode":"Nope"}'   # → 400
 ```
+
+A successful query that simply finds nothing returns HTTP 200 with
+`{"hits":0,"results":[]}` (the same shape is returned on an internal query
+error, which is logged server-side). If a `Fulltext Match` request unexpectedly
+returns empty on a freshly started instance, the Tantivy searcher init is
+covered in §8.
