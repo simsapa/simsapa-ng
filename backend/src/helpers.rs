@@ -1638,7 +1638,7 @@ pub fn word_uid_sanitize(word: &str) -> String {
 ///
 /// Pure and side-effect free so it can be unit-tested in isolation; the actual
 /// DB lookups live in `AppData::resolve_word_uid`. See
-/// `docs/localhost-api-search-endpoints.md`.
+/// `docs/simsapa-localhost-api-search-endpoints.md`.
 pub fn normalize_human_word_uid(input: &str) -> String {
     let trimmed = input.trim().trim_end_matches(".json").trim();
     if trimmed.is_empty() {

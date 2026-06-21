@@ -1,7 +1,7 @@
 # Tasks: make the localhost API routes more tolerant, guessable, and self-describing
 
 Generated from `tasks/2026-06-21-150400-api-routes-tolerance-feature-request.md`.
-Companion reference doc: `docs/localhost-api-search-endpoints.md`.
+Companion reference doc: `docs/simsapa-localhost-api-search-endpoints.md`.
 
 **Scope:** the Rocket webserver in `bridges/src/api.rs` plus the backend resolver
 helpers it delegates to (`backend/src/app_data.rs`, `backend/src/db/dictionaries.rs`,
@@ -68,7 +68,7 @@ routes are exercised in-app.
 - `backend/src/update_checker.rs` - `get_app_version()` (`/health` version field, P5).
 - `assets/qml/SuttaHtmlView_{Desktop,Mobile}.qml`, `assets/qml/DictionaryHtmlView_{Desktop,Mobile}.qml` - **Read-only reference**: confirm the `<uid..>` path routes keep working with the per-segment-encoded + raw-`/` + trailing-`/` form (do not modify unless a regression appears).
 - `src-ts/helpers.ts` - **Read-only reference**: the raw-uid `/open_sutta_*` callers (P7 naming must not break them).
-- `docs/localhost-api-search-endpoints.md` - Companion doc; rewrite for the new tolerant behaviour and trim the now-fixed gotchas (Task 7).
+- `docs/simsapa-localhost-api-search-endpoints.md` - Companion doc; rewrite for the new tolerant behaviour and trim the now-fixed gotchas (Task 7).
 - `bridges/src/api.rs` `mod tests` - Unit tests for `parse_*`; extend with resolver/normalization/`dict_sources`-filter tests.
 - `backend/src/db/dpd_models.rs` - **(Task 1)** added `serde::Serialize` to `BoldDefinition` so the resolver's JSON lane can return bold-definition structured rows.
 - `backend/tests/test_resolve_word_uid.rs` - **(Task 1)** new integration test for `resolve_word_uid` two-lane invariant + HTML parity (live DB).
@@ -79,7 +79,7 @@ routes are exercised in-app.
 
 ### Notes
 
-- **No standalone HTTP route test harness exists** (Rocket is launched via FFI). New automated tests are **unit tests** on the extracted helpers (`resolve_word_uid`, the `dict_sources` filter, the uid-normalization fn) in `mod tests` / backend `cargo test`, plus **manual `curl` verification** against a running app per `docs/localhost-api-search-endpoints.md §12`.
+- **No standalone HTTP route test harness exists** (Rocket is launched via FFI). New automated tests are **unit tests** on the extracted helpers (`resolve_word_uid`, the `dict_sources` filter, the uid-normalization fn) in `mod tests` / backend `cargo test`, plus **manual `curl` verification** against a running app per `docs/simsapa-localhost-api-search-endpoints.md §12`.
 - Tests that need real data use the live appdata DB at the path in `CLAUDE.md` (do **not** gate behind `#[ignore]`; see `feedback_local_integration_tests`).
 - **Build with `make build -B`** (not direct cmake). **Run tests only after all sub-tasks of a top-level task are done**, and `make qml-test` only if explicitly asked (see memory).
 - After each top-level task the app must compile cleanly and existing tests pass; every change is additive, success-case responses unchanged byte-for-byte.
@@ -150,7 +150,7 @@ Verified against the code before finalizing. Findings, most → least important:
    scope — do **not** build import-abort/startup cleanup. `/health` and
    `/sutta_and_dict_search_options` return `get_distinct_sources` as-is.
 
-7. **Doc-trim coupling (P7).** `docs/localhost-api-search-endpoints.md` §13.3 and
+7. **Doc-trim coupling (P7).** `docs/simsapa-localhost-api-search-endpoints.md` §13.3 and
    §12.2 currently *document the gotchas as permanent*; Task 7.2 must replace (not
    append to) those caveats, and the existing `app_data.rs:376/416` "to ensure
    consistent behavior" comments should be updated to point at the new shared
@@ -299,6 +299,6 @@ The numeric `<id>/dpd` → HTML mapping therefore needs a runtime
 - [x] 7.0 Consistency nits, stale-comment fixes, and documentation rewrite (P7 + doc)
   - **Spec / deps:** depends on Tasks 1–6 landing. No behaviour change beyond doc/comment clarity and optional naming.
   - [x] 7.1 Clarify the `GET /suttas/<uid>` GUI-navigation route in the doc (it pokes the GUI, returns no content) — document it clearly under §14.2; do **not** rename the path (the raw-uid `src-ts/helpers.ts` callers depend on it). Note the intentional optional `.json` on `get_word_json`.
-  - [x] 7.2 Rewrite `docs/localhost-api-search-endpoints.md`: add the new `/word.json?<uid>` / `/word_html` / `/sutta_html` query-param routes and `/health`; replace the `%2F`-trap and silent-`[]` caveats (§12.2, §13.3) with the new tolerant behaviour and the 404/verbose semantics (noting the 404 still carries the prior `[]` body so body-reading clients are unaffected); document the self-correcting auto-detect (§5). Route names unchanged.
+  - [x] 7.2 Rewrite `docs/simsapa-localhost-api-search-endpoints.md`: add the new `/word.json?<uid>` / `/word_html` / `/sutta_html` query-param routes and `/health`; replace the `%2F`-trap and silent-`[]` caveats (§12.2, §13.3) with the new tolerant behaviour and the 404/verbose semantics (noting the 404 still carries the prior `[]` body so body-reading clients are unaffected); document the self-correcting auto-detect (§5). Route names unchanged.
   - [x] 7.3 Add an agent-facing "how to search suttas and the dictionary, and retrieve complete HTML pages" walkthrough (search → copy `uid` → fetch full HTML/JSON), making the happy path obvious in one read.
-  - [x] 7.4 Update the notable-docs entry for `localhost-api-search-endpoints.md` in `AGENTS.md` (the real file — `CLAUDE.md` is a symlink; writes through it are refused) to reflect the new tolerant routes; run `make test` (full suite) once, per the after-all-subtasks rule.
+  - [x] 7.4 Update the notable-docs entry for `simsapa-localhost-api-search-endpoints.md` in `AGENTS.md` (the real file — `CLAUDE.md` is a symlink; writes through it are refused) to reflect the new tolerant routes; run `make test` (full suite) once, per the after-all-subtasks rule.

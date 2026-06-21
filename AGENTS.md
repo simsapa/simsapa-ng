@@ -95,7 +95,7 @@ Notable feature docs:
   the punctuation-bearing rendered HTML). Pairs with the bootstrap-time
   normalization in
   [text-processing-for-contains-match-and-fulltext-match-search.md](./docs/text-processing-for-contains-match-and-fulltext-match-search.md).
-- [Localhost API search endpoints](./docs/localhost-api-search-endpoints.md) —
+- [Localhost API search endpoints](./docs/simsapa-localhost-api-search-endpoints.md) —
   the **whole Rocket route surface** in `bridges/src/api.rs` (search, word/sutta
   retrieval, GUI-navigation, assets), plus the **agent quick-start** (§0: search →
   copy `uid` → fetch full HTML/JSON). The four search routes: general `POST /search`

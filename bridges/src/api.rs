@@ -43,7 +43,7 @@ pub struct ApiSearchResult {
 /// All fields beyond `query_text` are optional; serde deserializes missing
 /// `Option` fields to `None`, so existing clients that omit `mode`,
 /// `search_area`, `page_len`, `show_all_snippets`, or `snippet_exclude` keep
-/// working unchanged. See docs/localhost-api-search-endpoints.md.
+/// working unchanged. See docs/simsapa-localhost-api-search-endpoints.md.
 #[derive(Debug, Clone, Deserialize)]
 pub struct ApiSearchRequest {
     pub query_text: String,
@@ -993,7 +993,7 @@ fn get_search_options(dbm: &State<Arc<DbManager>>) -> Json<SearchOptions> {
 /// defaults to 20 (the browser-extension default). `show_all_snippets` /
 /// `snippet_exclude` are read straight from the request (the backend only
 /// applies them for Suttas/Library). All other fields keep their defaults.
-/// See docs/localhost-api-search-endpoints.md.
+/// See docs/simsapa-localhost-api-search-endpoints.md.
 fn build_search_params(request: &ApiSearchRequest, mode: SearchMode, area: &SearchArea) -> SearchParams {
     // "Languages"/"Language" (and empty) are the no-filter placeholders; same
     // for "Dictionaries"/"Dictionary" on the source filter.
@@ -1048,7 +1048,7 @@ fn build_search_params(request: &ApiSearchRequest, mode: SearchMode, area: &Sear
 /// webserver shares the GUI's `FULLTEXT_SEARCHER`, and the query path returns
 /// silent-empty if it was never initialized (e.g. a curl request before QML
 /// `load_searcher` ran). Non-fulltext modes never touch the index.
-/// See docs/localhost-api-search-endpoints.md.
+/// See docs/simsapa-localhost-api-search-endpoints.md.
 fn run_search(
     dbm: &Arc<DbManager>,
     query_text: String,
@@ -1088,7 +1088,7 @@ fn run_search(
 /// (`was_uid_auto = false`) — is untouched. `run_search` consumes its
 /// `query_text`/`params` by value, so the original query and a freshly built
 /// params set are passed for the re-run (Finding 2). See
-/// docs/localhost-api-search-endpoints.md.
+/// docs/simsapa-localhost-api-search-endpoints.md.
 #[allow(clippy::too_many_arguments)]
 fn run_search_with_uid_fallback(
     dbm: &Arc<DbManager>,
@@ -1129,7 +1129,7 @@ fn run_search_with_uid_fallback(
 /// query that returns ≥1 hit, and any explicitly requested mode, is untouched.
 /// `run_search` consumes its args by value, so each attempt rebuilds params and
 /// passes a fresh query string (Finding 2). See
-/// docs/localhost-api-search-endpoints.md.
+/// docs/simsapa-localhost-api-search-endpoints.md.
 fn run_dict_combined_with_fallback(
     dbm: &Arc<DbManager>,
     request: &ApiSearchRequest,
@@ -1170,7 +1170,7 @@ fn run_dict_combined_with_fallback(
 /// queries it uses `fallback_mode` (FulltextMatch for `/suttas_fulltext_search`,
 /// ContainsMatch for `/suttas_contains_search`). Builds params via
 /// `build_search_params` and executes via `run_search` (deconstructor `None`).
-/// See docs/localhost-api-search-endpoints.md.
+/// See docs/simsapa-localhost-api-search-endpoints.md.
 fn run_suttas_search(request: &ApiSearchRequest, dbm: &Arc<DbManager>, fallback_mode: SearchMode) -> Json<ApiSearchResult> {
     let query_text_orig = request.query_text.clone();
     let page_num = request.page_num.unwrap_or(0) as usize;
@@ -1197,7 +1197,7 @@ fn run_suttas_search(request: &ApiSearchRequest, dbm: &Arc<DbManager>, fallback_
 
 /// POST /suttas_fulltext_search
 /// Search suttas using FulltextMatch (tantivy), or UidMatch for reference-like
-/// queries. See docs/localhost-api-search-endpoints.md.
+/// queries. See docs/simsapa-localhost-api-search-endpoints.md.
 #[post("/suttas_fulltext_search", data = "<request>")]
 fn suttas_fulltext_search(request: Json<ApiSearchRequest>, dbm: &State<Arc<DbManager>>) -> Json<ApiSearchResult> {
     run_suttas_search(&request, dbm.inner(), SearchMode::FulltextMatch)
@@ -1205,7 +1205,7 @@ fn suttas_fulltext_search(request: Json<ApiSearchRequest>, dbm: &State<Arc<DbMan
 
 /// POST /suttas_contains_search
 /// Search suttas using ContainsMatch (literal substring), or UidMatch for
-/// reference-like queries. See docs/localhost-api-search-endpoints.md.
+/// reference-like queries. See docs/simsapa-localhost-api-search-endpoints.md.
 #[post("/suttas_contains_search", data = "<request>")]
 fn suttas_contains_search(request: Json<ApiSearchRequest>, dbm: &State<Arc<DbManager>>) -> Json<ApiSearchResult> {
     run_suttas_search(&request, dbm.inner(), SearchMode::ContainsMatch)
@@ -1217,7 +1217,7 @@ fn suttas_contains_search(request: Json<ApiSearchRequest>, dbm: &State<Arc<DbMan
 /// "Fulltext Match", Dictionary → "Combined"). An unrecognized `mode` /
 /// `search_area` returns HTTP 400. Unlike the named convenience routes, `/search`
 /// honors the requested mode strictly (no reference → UidMatch override).
-/// See docs/localhost-api-search-endpoints.md.
+/// See docs/simsapa-localhost-api-search-endpoints.md.
 #[post("/search", data = "<request>")]
 fn search(request: Json<ApiSearchRequest>, dbm: &State<Arc<DbManager>>) -> Result<Json<ApiSearchResult>, (Status, String)> {
     let query_text_orig = request.query_text.clone();
@@ -1459,7 +1459,7 @@ fn word_miss_verbose_envelope(uid: &str) -> serde_json::Value {
 /// on miss — so a body-reading client (e.g. an installed browser extension) is
 /// unaffected. The only added signal is the **status**: `200` on hit, `404` on
 /// miss (the `[]` body is still present). `?verbose=1` is a separate opt-in
-/// shape. See docs/localhost-api-search-endpoints.md.
+/// shape. See docs/simsapa-localhost-api-search-endpoints.md.
 fn word_json_response(uid: &str, verbose: Option<&str>) -> (Status, Json<serde_json::Value>) {
     let resolved = get_app_data().resolve_word_uid(uid);
     let verbose = is_verbose_flag(verbose);
@@ -1504,7 +1504,7 @@ fn get_word_json(uid_with_ext: PathBuf, verbose: Option<&str>) -> (Status, Json<
 /// so a caller can pass the uid exactly as it appears in a `SearchResult.uid`,
 /// with or without percent-encoding. Delegates to the same resolver as the path
 /// route; the existing `/words/<uid..>` route is unchanged. See
-/// docs/localhost-api-search-endpoints.md.
+/// docs/simsapa-localhost-api-search-endpoints.md.
 #[get("/word.json?<uid>&<verbose>")]
 fn get_word_json_q(uid: &str, verbose: Option<&str>) -> (Status, Json<serde_json::Value>) {
     let uid = uid.trim_end_matches(".json");
@@ -1591,7 +1591,7 @@ pub struct HealthInfo {
 /// Environment / readiness snapshot so a headless caller can learn version,
 /// live port, DB paths, fulltext-searcher readiness, row counts, languages and
 /// dictionary sources in one call (instead of probing several endpoints).
-/// `GET /` stays the landing page. See docs/localhost-api-search-endpoints.md.
+/// `GET /` stays the landing page. See docs/simsapa-localhost-api-search-endpoints.md.
 #[get("/health")]
 fn health(dbm: &State<Arc<DbManager>>) -> Json<HealthInfo> {
     let g = get_app_globals_api();

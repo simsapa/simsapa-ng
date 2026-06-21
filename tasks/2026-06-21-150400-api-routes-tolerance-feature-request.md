@@ -71,7 +71,7 @@ as they are.
 **Backward-compat.** Purely additive; no existing route or response changes.
 **Alternative (cheaper, no new routes):** keep path routes only and just guarantee
 the docs say "raw `/`, never `%2F`" (already done in
-`localhost-api-search-endpoints.md` §13.3) — but a tolerant route removes the trap
+`simsapa-localhost-api-search-endpoints.md` §13.3) — but a tolerant route removes the trap
 entirely rather than documenting around it.
 
 ---
@@ -252,6 +252,6 @@ data cleanup is the real fix.
 
 ---
 
-*Companion reference:* `docs/localhost-api-search-endpoints.md` documents the current
+*Companion reference:* `docs/simsapa-localhost-api-search-endpoints.md` documents the current
 (pre-improvement) behaviour and the raw-`/`/`%2F`, hyphenation, and silent-`[]`
 gotchas in §12.2 and §13.3. As proposals here land, those caveats can be trimmed.

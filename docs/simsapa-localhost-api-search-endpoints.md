@@ -218,8 +218,7 @@ The webserver runs on a thread in the **same process** as the GUI
 (`cpp/gui.cpp` spawns `start_webserver`), so it shares the one process-global
 `FULLTEXT_SEARCHER` (`backend/src/lib.rs`). The query path does **not** self-init
 the searcher — `with_fulltext_searcher(...)` returns `None` when uninitialized
-and the query returns **silent-empty** results
-(see `project_fulltext_searcher_init_separate`).
+and the query returns **silent-empty** results.
 
 The shared `run_search` helper therefore calls
 `simsapa_backend::init_fulltext_searcher()` **only** when the resolved mode needs
