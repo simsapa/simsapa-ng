@@ -95,8 +95,10 @@ Notable feature docs:
   the punctuation-bearing rendered HTML). Pairs with the bootstrap-time
   normalization in
   [text-processing-for-contains-match-and-fulltext-match-search.md](./docs/text-processing-for-contains-match-and-fulltext-match-search.md).
-- [Localhost API search endpoints](./docs/localhost-api-search-endpoints.md) —
-  the four Rocket search routes in `bridges/src/api.rs`: general `POST /search`
+- [Localhost API search endpoints](./docs/simsapa-localhost-api-search-endpoints.md) —
+  the **whole Rocket route surface** in `bridges/src/api.rs` (search, word/sutta
+  retrieval, GUI-navigation, assets), plus the **agent quick-start** (§0: search →
+  copy `uid` → fetch full HTML/JSON). The four search routes: general `POST /search`
   (area-specific default mode, exact `SearchMode`/`SearchArea` serde names,
   HTTP 400 on unknown mode/area), `POST /suttas_fulltext_search` (FulltextMatch),
   `POST /suttas_contains_search` (ContainsMatch), and `POST /dict_combined_search`
@@ -108,7 +110,20 @@ Notable feature docs:
   `DpdLookup` remap** (query_task rejects `Combined + Dictionary`), and the
   **lazy, idempotent, mode-gated `init_fulltext_searcher()`** in `run_search`
   (shared process-global searcher; not eager at `start_webserver()` to avoid
-  reconcile-write contention). Pairs with
+  reconcile-write contention). **Tolerance layer (2026-06):** one shared
+  `AppData::resolve_word_uid` resolver behind both the JSON (`/words/<uid>.json`,
+  `get_word_json`) and HTML (`render_word_html_by_uid`) word routes — tolerant of
+  human/display (`dhamma 1.01`), numeric (`34626/dpd`) and hyphenated
+  (`dhamma-1-01/dpd`) forms via `normalize_human_word_uid`, preserving the
+  **two-lane invariant** (numeric → `dpd_headwords` row, hyphenated → `dict_words`
+  row); **encoding-agnostic query-param twins** `/word.json?uid=` / `/word_html?…`
+  / `/sutta_html?…` (accept `%2F`, unlike the `<uid..>` path routes which 422);
+  **404-on-miss** with the body preserved (`[]` for JSON) + opt-in `?verbose=1`
+  envelope; the **self-correcting UID auto-detect** (`run_dict_combined_with_fallback`
+  / `run_search_with_uid_fallback`: a 0-hit auto-`UidMatch` re-runs as normalized
+  `UidMatch` → `DpdLookup` for dict, or the route's fallback mode for suttas — no
+  silent 0-hit); and the **`GET /health`** readiness snapshot (version, port,
+  db_paths, `fulltext_searcher_ready`, counts, languages, dict_sources). Pairs with
   [search-snippet-highlight-pipeline.md](./docs/search-snippet-highlight-pipeline.md).
 - [Releases info lookup and the embedded fallback JSON](./docs/releases-info-and-fallback.md) —
   how the app obtains **releases info** (the `github_repo` / `version_tag` used
@@ -343,6 +358,60 @@ Consequences for query code (`backend/src/query_task.rs`): join on the rowid
 (`JOIN dict_words_fts f ON f.rowid = dict_words.id`) and project it with an
 alias when needed (`SELECT rowid AS headword_id`). When adding a new FTS5 table
 or query, follow this convention — do not reintroduce an `UNINDEXED` id column.
+
+### DPD records correlate to dict_words (structured data vs. rendered HTML)
+
+`dpd_headwords` and `dpd_roots` records (in `dpd.sqlite3`) and `dict_words`
+records (in `dictionaries.sqlite3`) are **two views of the same word**:
+
+- The **structured** data (grammar fields, meanings, etc.) lives in the
+  `dpd_headwords` / `dpd_roots` tables.
+- The **rendered HTML** page for that same dpd_headword / dpd_root lives in its
+  correlated `dict_words` record.
+
+This is why `get_word_json` (returns structured rows from
+`dpd_headwords`/`dpd_roots`/`dict_words`) and `render_word_html_by_uid` (resolves
+via `dict_words`) appear to reach different record sets — they are the structured
+and rendered-HTML views of the same word. To render a dpd_headword/dpd_root as
+HTML, resolve to the correlated `dict_words` row (which holds the HTML); **there is
+no separate DPD HTML renderer.**
+
+**Why the uids differ across tables (bootstrap rationale).** During the CLI
+bootstrap we import `dpd.sqlite3` (headword + root **structured** data, no HTML),
+then separately import the **rendered HTML pages from a DPD StarDict export** to
+build `dict_words`. The StarDict export is **keyed by `lemma_1`**, so
+`dict_words.word` mirrors `dpd_headwords.lemma_1` one-to-one (a load-bearing
+invariant — `SearchQueryTask::lemma_1_dpd_headword_match_fts5_full` scans
+`dict_words_fts.word` because of it). If `dict_words` used the `<row_id>/dpd` uid
+format, **headword ids and root ids would collide** in the shared `dict_words`
+table — so `dict_words.uid` is instead built from the sanitized lemma/root word
+(`word_uid_sanitize(word) + "/dpd"`), which maps back **unambiguously** to the
+right `dpd.sqlite3` row.
+
+**The two uids are NOT the same string — correlation is `lemma_1` → sanitize, not
+a uid string-equality join.** Real values from the shipped DB:
+
+| `dpd_headwords` | | `dict_words` (HTML) |
+|---|---|---|
+| `id` | `uid` / `lemma_1` | `uid` / `word` |
+| `34626` | `34626/dpd` / `dhamma 1.01` | `dhamma-1-01/dpd` / `dhamma 1.01` |
+
+There is **no** `dict_words` row with uid `34626/dpd`. To reach the HTML row from a
+numeric `<id>/dpd`: fetch the headword by id → `word_uid_sanitize(lemma_1)` +
+`/dpd` → `get_word`. Consequently `34626/dpd` (→ dpd_headword structured row) and
+`dhamma-1-01/dpd` (→ dict_words structured row) are **different structured records
+of the same word**, both valid. Roots follow the same pattern but the disambiguated
+form differs: `dpd_roots.uid` = `√akkh/dpd` (root key) while the `dict_words` row is
+the sanitized root *word* (`√path-1/dpd` for `dpd_roots.root = "√path"` disambiguated
+as `√path 1`).
+
+> **Possible future bootstrap ergonomics improvement (not yet implemented):** add a
+> nullable indexed `dpd_headword_id` / `dpd_root_id` column to `dict_words` (or a
+> `dict_word_uid` column to the dpd tables), populated at bootstrap via the
+> `lemma_1` join, so the cross-table mapping is a direct indexed lookup instead of
+> a runtime `word_uid_sanitize` round-trip. Requires a re-bootstrap + DB version
+> bump; the headword join is clean (`word = lemma_1`) but the root join needs care
+> (disambiguation). See the API-tolerance task list for the trade-off analysis.
 
 ## Testing with the Database
 

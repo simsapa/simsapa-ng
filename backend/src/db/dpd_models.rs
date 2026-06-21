@@ -268,7 +268,7 @@ pub struct FamilyIdiom {
     pub count: i32,
 }
 
-#[derive(Debug, Clone, Queryable, QueryableByName, Selectable, Identifiable, PartialEq)]
+#[derive(Debug, Clone, Queryable, QueryableByName, Selectable, Identifiable, PartialEq, serde::Serialize)]
 #[diesel(table_name = bold_definitions)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
 pub struct BoldDefinition {

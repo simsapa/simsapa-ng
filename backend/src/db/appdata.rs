@@ -14,6 +14,14 @@ static COMMON_WORDS_JSON: &str = include_str!("../../../assets/common-words.json
 pub type AppdataDbHandle = DatabaseHandle;
 
 impl AppdataDbHandle {
+    /// Count `suttas` rows (for `/health`). A 0 here means the DB is not
+    /// loaded / not installed.
+    pub fn count_suttas(&self) -> Result<i64> {
+        use crate::db::appdata_schema::suttas::dsl::*;
+        self.do_read(|db_conn| suttas.count().get_result::<i64>(db_conn))
+            .context("count_suttas failed")
+    }
+
     /// Get distinct sutta languages from the database
     pub fn get_sutta_languages(&self) -> Vec<String> {
         use crate::db::appdata_schema::suttas::dsl::*;

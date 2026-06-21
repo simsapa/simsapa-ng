@@ -159,10 +159,10 @@ static FULLTEXT_SEARCHER: std::sync::RwLock<Option<search::searcher::FulltextSea
 
 #[unsafe(no_mangle)]
 pub extern "C" fn init_app_globals() {
-    if APP_GLOBALS.get().is_none() {
-        let g = AppGlobals::new();
-        APP_GLOBALS.set(g).expect("Can't set AppGlobals");
-    }
+    // get_or_init is race-free (exactly-once): the previous
+    // get().is_none() + set().expect() pattern could panic if two threads
+    // initialized concurrently (e.g. parallel integration tests).
+    APP_GLOBALS.get_or_init(AppGlobals::new);
 }
 
 pub fn get_app_globals() -> &'static AppGlobals {
@@ -192,11 +192,19 @@ pub unsafe extern "C" fn init_android_context(
 
 #[unsafe(no_mangle)]
 pub extern "C" fn init_app_data() {
-    if APP_DATA.get().is_none() {
+    // get_or_init is race-free (exactly-once): only the initializing thread
+    // runs AppData::new() and the post-init warm below; concurrent callers
+    // block until it is set, then skip. The previous get().is_none() + set()
+    // pattern could double-construct and panic under parallel init.
+    let mut newly_init = false;
+    APP_DATA.get_or_init(|| {
+        newly_init = true;
         info("init_app_data() start");
         let app_data = AppData::new();
-        APP_DATA.set(app_data).expect("Can't set AppData");
         info("init_appdata() end");
+        app_data
+    });
+    if newly_init {
 
         // TEMPORARY (testing): force-enable the three Settings → Rendering
         // toggles so they can be exercised without opening the Settings
@@ -331,6 +339,14 @@ pub fn reinit_fulltext_searcher() {
             warn(&format!("Failed to initialize fulltext searcher: {}", e));
         }
     }
+}
+
+/// Whether the process-global fulltext searcher has been initialized (the
+/// Tantivy indexes are open). Lets a headless caller learn — via `/health` —
+/// whether a `FulltextMatch` / `Combined` query will return real results yet,
+/// without running a throwaway query. See docs/simsapa-localhost-api-search-endpoints.md.
+pub fn is_fulltext_searcher_ready() -> bool {
+    FULLTEXT_SEARCHER.read().map(|g| g.is_some()).unwrap_or(false)
 }
 
 /// Get the fulltext searcher if initialized.
