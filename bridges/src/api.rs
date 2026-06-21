@@ -125,11 +125,26 @@ pub fn get_app_globals_api() -> &'static AppGlobals {
 /// Convert a Path to a string using forward slashes as separators.
 /// On Windows, paths use backslashes, but URLs and database paths use forward slashes.
 /// This ensures consistent path handling across all platforms.
+///
+/// NOTE: this joins path *components*, so an absolute path gains a doubled
+/// leading slash (`/home/...` → `//home/...`) — `Path::iter()` yields the root
+/// `/` as its first component and the join adds another. That is harmless for
+/// the **relative** `<uid..>` segments this is used to normalize (they never
+/// start at the root), but for a real absolute file path use
+/// `fs_path_to_forward_slash` instead.
 fn pathbuf_to_forward_slash_string(path: &Path) -> String {
     path.iter()
         .map(|s| s.to_str().unwrap_or(""))
         .collect::<Vec<_>>()
         .join("/")
+}
+
+/// Convert an absolute filesystem path to a forward-slash string, preserving a
+/// single leading slash (no doubling). Use this for real file paths (e.g. the
+/// `/health` `db_paths`); on Windows it also maps `\` → `/` and keeps a UNC
+/// `\\server` as `//server`.
+fn fs_path_to_forward_slash(path: &Path) -> String {
+    path.to_string_lossy().replace('\\', "/")
 }
 
 /// Convert verse references to actual sutta UIDs.
@@ -1600,9 +1615,9 @@ fn health(dbm: &State<Arc<DbManager>>) -> Json<HealthInfo> {
         app_version: simsapa_backend::update_checker::get_app_version(),
         api_port: g.api_port,
         db_paths: HealthDbPaths {
-            appdata: pathbuf_to_forward_slash_string(&g.paths.appdata_abs_path),
-            dictionaries: pathbuf_to_forward_slash_string(&g.paths.dict_abs_path),
-            dpd: pathbuf_to_forward_slash_string(&g.paths.dpd_abs_path),
+            appdata: fs_path_to_forward_slash(&g.paths.appdata_abs_path),
+            dictionaries: fs_path_to_forward_slash(&g.paths.dict_abs_path),
+            dpd: fs_path_to_forward_slash(&g.paths.dpd_abs_path),
         },
         fulltext_searcher_ready: simsapa_backend::is_fulltext_searcher_ready(),
         // A count error -> None -> null (Finding 5); a real empty DB -> Some(0).
