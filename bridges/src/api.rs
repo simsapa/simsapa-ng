@@ -19,7 +19,7 @@ use simsapa_backend::html_content::sutta_html_page;
 use simsapa_backend::dir_list::generate_html_directory_listing;
 use simsapa_backend::db::DbManager;
 use simsapa_backend::db::appdata_models::Sutta;
-use simsapa_backend::helpers::{create_or_update_linux_desktop_icon_file, query_text_to_uid_field_query, verse_sutta_ref_to_uid};
+use simsapa_backend::helpers::{create_or_update_linux_desktop_icon_file, query_text_to_uid_field_query, verse_sutta_ref_to_uid, normalize_human_word_uid};
 use simsapa_backend::logger::{info, warn, error, profile};
 use simsapa_backend::types::{SearchResult, SearchParams, SearchMode, SearchArea};
 use simsapa_backend::query_task::SearchQueryTask;
@@ -663,13 +663,47 @@ fn shutdown(shutdown: Shutdown) {
 }
 
 
-#[get("/get_sutta_html_by_uid/<window_id>/<uid..>?<anchor>")]
-fn get_sutta_html_by_uid(window_id: &str, uid: PathBuf, anchor: Option<&str>, _dbm: &State<Arc<DbManager>>) -> RawHtml<String> {
-    // Convert path to forward slashes for cross-platform consistency
-    let uid_str = pathbuf_to_forward_slash_string(&uid);
-
+/// Shared body for the sutta-HTML routes. Normalizes verse refs and resolves
+/// `/pli/ms` / range fallbacks via `lookup_sutta_with_fallback` (Finding 3),
+/// then renders. Returns `200` when the sutta exists, `404` (with the prior
+/// blank-page body) on a genuine miss — the success body is unchanged.
+fn sutta_html_response(window_id: &str, uid: &str, anchor: Option<&str>, dbm: &DbManager) -> (Status, RawHtml<String>) {
     // Show reference anchors only when navigating to a specific anchor
     let show_references = anchor.is_some();
+    let app_data = get_app_data();
+    let processed_uid = convert_verse_ref_to_sutta_uid(uid);
+
+    match lookup_sutta_with_fallback(dbm, &processed_uid) {
+        Some(sutta) => {
+            let html = app_data.render_sutta_html_by_uid(window_id, &sutta.uid, show_references);
+            (Status::Ok, RawHtml(html))
+        }
+        None => {
+            // Keep the prior blank-page body; add the 404 status signal.
+            let html = app_data.render_sutta_html_by_uid(window_id, &processed_uid, show_references);
+            (Status::NotFound, RawHtml(html))
+        }
+    }
+}
+
+/// Shared body for the word-HTML routes. Renders via the resolver-backed
+/// renderer and returns `200` when the word resolves, `404` (with the prior
+/// blank-page body) on a miss — the success body is unchanged.
+fn word_html_response(window_id: &str, uid: &str) -> (Status, RawHtml<String>) {
+    let app_data = get_app_data();
+    let html = app_data.render_word_html_by_uid(window_id, uid);
+    let status = if app_data.resolve_word_uid(uid).is_some() {
+        Status::Ok
+    } else {
+        Status::NotFound
+    };
+    (status, RawHtml(html))
+}
+
+#[get("/get_sutta_html_by_uid/<window_id>/<uid..>?<anchor>")]
+fn get_sutta_html_by_uid(window_id: &str, uid: PathBuf, anchor: Option<&str>, dbm: &State<Arc<DbManager>>) -> (Status, RawHtml<String>) {
+    // Convert path to forward slashes for cross-platform consistency
+    let uid_str = pathbuf_to_forward_slash_string(&uid);
 
     let log_msg = if let Some(a) = anchor {
         format!("get_sutta_html_by_uid(): window_id: {}, uid: {}, anchor: {}", window_id, uid_str, a)
@@ -678,22 +712,16 @@ fn get_sutta_html_by_uid(window_id: &str, uid: PathBuf, anchor: Option<&str>, _d
     };
     info(&log_msg);
 
-    let app_data = get_app_data();
-    let html = app_data.render_sutta_html_by_uid(window_id, &uid_str, show_references);
-
-    RawHtml(html)
+    sutta_html_response(window_id, &uid_str, anchor, dbm)
 }
 
 #[get("/get_word_html_by_uid/<window_id>/<uid..>")]
-fn get_word_html_by_uid(window_id: &str, uid: PathBuf, _dbm: &State<Arc<DbManager>>) -> RawHtml<String> {
+fn get_word_html_by_uid(window_id: &str, uid: PathBuf, _dbm: &State<Arc<DbManager>>) -> (Status, RawHtml<String>) {
     // Convert path to forward slashes for cross-platform consistency
     let uid_str = pathbuf_to_forward_slash_string(&uid);
     info(&format!("get_word_html_by_uid(): window_id: {}, uid: {}", window_id, uid_str));
 
-    let app_data = get_app_data();
-    let html = app_data.render_word_html_by_uid(window_id, &uid_str);
-
-    RawHtml(html)
+    word_html_response(window_id, &uid_str)
 }
 
 #[get("/get_book_spine_item_html_by_uid/<window_id>/<spine_item_uid..>")]
@@ -1047,6 +1075,96 @@ fn run_search(
     }
 }
 
+/// Run a search whose mode may have been chosen by the reference/uid
+/// auto-detect (`query_text_to_uid_field_query`), with a self-correcting
+/// fallback: when the **auto-detected** `UidMatch` run returns 0 hits (because
+/// the human form differs from the stored uid, e.g. `dhamma 1.01` vs
+/// `dhamma-1-01/dpd`), transparently re-run the *original* query under
+/// `fallback_mode` (`DpdLookup` for dictionary, `FulltextMatch`/`ContainsMatch`
+/// for suttas) before returning.
+///
+/// Back-compat: the fallback only fires on `was_uid_auto && hits == 0`, so any
+/// query that returns ≥1 hit today — and any *explicitly* requested mode
+/// (`was_uid_auto = false`) — is untouched. `run_search` consumes its
+/// `query_text`/`params` by value, so the original query and a freshly built
+/// params set are passed for the re-run (Finding 2). See
+/// docs/localhost-api-search-endpoints.md.
+#[allow(clippy::too_many_arguments)]
+fn run_search_with_uid_fallback(
+    dbm: &Arc<DbManager>,
+    request: &ApiSearchRequest,
+    area: SearchArea,
+    page_num: usize,
+    was_uid_auto: bool,
+    primary_query: String,
+    primary_mode: SearchMode,
+    query_text_orig: String,
+    fallback_mode: SearchMode,
+    deconstructor: Option<Vec<String>>,
+) -> Json<ApiSearchResult> {
+    let params = build_search_params(request, primary_mode, &area);
+    let result = run_search(dbm, primary_query, params, area.clone(), page_num, deconstructor.clone());
+
+    if was_uid_auto && result.0.hits == 0 {
+        info(&format!(
+            "auto-detected UidMatch returned 0 hits; re-running '{}' as {:?}",
+            query_text_orig, fallback_mode
+        ));
+        let params = build_search_params(request, fallback_mode, &area);
+        return run_search(dbm, query_text_orig, params, area, page_num, deconstructor);
+    }
+
+    result
+}
+
+/// Dictionary combined search with the self-correcting UID auto-detect (P4).
+///
+/// The primary run is `primary_mode` on `primary_query`. When an
+/// **auto-detected** `UidMatch` returns 0 hits (the human form differs from the
+/// stored uid), fall back in order to: (1) `UidMatch` on the *normalized* uid
+/// (Task 1.3 — e.g. `dhamma 1.01` → `uid:dhamma-1-01/dpd`, the exact headword;
+/// a raw `DpdLookup` of `dhamma 1.01` finds nothing because of the number), then
+/// (2) `DpdLookup` on the original query as a last resort. So a uid-like query
+/// never silently returns 0. Only fires on `was_uid_auto && hits == 0`; any
+/// query that returns ≥1 hit, and any explicitly requested mode, is untouched.
+/// `run_search` consumes its args by value, so each attempt rebuilds params and
+/// passes a fresh query string (Finding 2). See
+/// docs/localhost-api-search-endpoints.md.
+fn run_dict_combined_with_fallback(
+    dbm: &Arc<DbManager>,
+    request: &ApiSearchRequest,
+    page_num: usize,
+    was_uid_auto: bool,
+    primary_query: String,
+    primary_mode: SearchMode,
+    query_text_orig: String,
+    deconstructor: Option<Vec<String>>,
+) -> Json<ApiSearchResult> {
+    let area = SearchArea::Dictionary;
+    let params = build_search_params(request, primary_mode, &area);
+    let result = run_search(dbm, primary_query, params, area.clone(), page_num, deconstructor.clone());
+
+    if !(was_uid_auto && result.0.hits == 0) {
+        return result;
+    }
+
+    // Fallback 1: normalized UidMatch — the exact entry for a numbered display form.
+    let normalized = normalize_human_word_uid(&query_text_orig);
+    if !normalized.is_empty() {
+        let params = build_search_params(request, SearchMode::UidMatch, &area);
+        let r2 = run_search(dbm, format!("uid:{}", normalized), params, area.clone(), page_num, deconstructor.clone());
+        if r2.0.hits > 0 {
+            info(&format!("auto UidMatch 0-hit; normalized UidMatch 'uid:{}' -> {} hits", normalized, r2.0.hits));
+            return r2;
+        }
+    }
+
+    // Fallback 2: DpdLookup on the original query.
+    info(&format!("auto UidMatch 0-hit; re-running '{}' as DpdLookup", query_text_orig));
+    let params = build_search_params(request, SearchMode::DpdLookup, &area);
+    run_search(dbm, query_text_orig, params, area, page_num, deconstructor)
+}
+
 /// Shared body for the named Suttas search routes. Runs the sutta-reference →
 /// `UidMatch` auto-detect (`query_text_to_uid_field_query`); for ordinary
 /// queries it uses `fallback_mode` (FulltextMatch for `/suttas_fulltext_search`,
@@ -1058,18 +1176,23 @@ fn run_suttas_search(request: &ApiSearchRequest, dbm: &Arc<DbManager>, fallback_
     let page_num = request.page_num.unwrap_or(0) as usize;
 
     // Reference auto-detect: query_text_to_uid_field_query returns "uid:..." for
-    // reference-like queries (e.g. "sn56.11", "MN 44", "dhp182").
+    // reference-like queries (e.g. "sn56.11", "MN 44", "dhp182"). When that auto
+    // UidMatch finds nothing, run_search_with_uid_fallback re-runs the original
+    // query under fallback_mode (self-correcting, no silent 0-hit).
     let uid_query = query_text_to_uid_field_query(&query_text_orig);
-    let (query_text, mode) = if uid_query.starts_with("uid:") {
+    let was_uid_auto = uid_query.starts_with("uid:");
+    let (query_text, mode) = if was_uid_auto {
         (uid_query, SearchMode::UidMatch)
     } else {
-        (query_text_orig, fallback_mode)
+        (query_text_orig.clone(), fallback_mode.clone())
     };
 
     info(&format!("run_suttas_search(): query='{}', page={}, mode={:?}", query_text, page_num, mode));
 
-    let params = build_search_params(request, mode, &SearchArea::Suttas);
-    run_search(dbm, query_text, params, SearchArea::Suttas, page_num, None)
+    run_search_with_uid_fallback(
+        dbm, request, SearchArea::Suttas, page_num,
+        was_uid_auto, query_text, mode, query_text_orig, fallback_mode, None,
+    )
 }
 
 /// POST /suttas_fulltext_search
@@ -1120,18 +1243,12 @@ fn search(request: Json<ApiSearchRequest>, dbm: &State<Arc<DbManager>>) -> Resul
 
     // Dictionary "Combined" is bridge-orchestrated and must NOT reach
     // SearchQueryTask as Combined (it errors there). Map it to the
-    // /dict_combined_search behaviour: UID pattern → UidMatch, else DpdLookup.
-    // For Suttas/Library, Combined is handled inside results_page (→ FulltextMatch).
-    let (query_text, mode) = if area == SearchArea::Dictionary && mode == SearchMode::Combined {
-        let uid_query = query_text_to_uid_field_query(&query_text_orig);
-        if uid_query.starts_with("uid:") {
-            (uid_query, SearchMode::UidMatch)
-        } else {
-            (query_text_orig.clone(), SearchMode::DpdLookup)
-        }
-    } else {
-        (query_text_orig.clone(), mode)
-    };
+    // /dict_combined_search behaviour: UID pattern → UidMatch (self-correcting
+    // to normalized-UidMatch / DpdLookup on a 0-hit), else DpdLookup directly.
+    // For Suttas/Library, Combined is handled inside results_page (→
+    // FulltextMatch). Only this auto-resolved UidMatch falls back; an explicitly
+    // requested mode stays strict.
+    let dict_combined = area == SearchArea::Dictionary && mode == SearchMode::Combined;
 
     // Dictionary returns the deconstructor (same as /dict_combined_search),
     // computed on the original query; for Suttas/Library it is None.
@@ -1146,10 +1263,25 @@ fn search(request: Json<ApiSearchRequest>, dbm: &State<Arc<DbManager>>) -> Resul
         None
     };
 
-    info(&format!("search(): query='{}', page={}, area={:?}, mode={:?}", query_text, page_num, area, mode));
+    if dict_combined {
+        let uid_query = query_text_to_uid_field_query(&query_text_orig);
+        let was_uid_auto = uid_query.starts_with("uid:");
+        let (query_text, mode) = if was_uid_auto {
+            (uid_query, SearchMode::UidMatch)
+        } else {
+            (query_text_orig.clone(), SearchMode::DpdLookup)
+        };
+        info(&format!("search(): query='{}', page={}, area=Dictionary(Combined), mode={:?}", query_text, page_num, mode));
+        return Ok(run_dict_combined_with_fallback(
+            dbm.inner(), &request, page_num,
+            was_uid_auto, query_text, mode, query_text_orig, deconstructor,
+        ));
+    }
 
+    // Explicit mode / non-dictionary area: strict, single run (no fallback).
+    info(&format!("search(): query='{}', page={}, area={:?}, mode={:?}", query_text_orig, page_num, area, mode));
     let params = build_search_params(&request, mode, &area);
-    Ok(run_search(dbm.inner(), query_text, params, area, page_num, deconstructor))
+    Ok(run_search(dbm.inner(), query_text_orig, params, area, page_num, deconstructor))
 }
 
 /// POST /dict_combined_search
@@ -1159,12 +1291,15 @@ fn dict_combined_search(request: Json<ApiSearchRequest>, dbm: &State<Arc<DbManag
     let query_text_orig = request.query_text.clone();
     let page_num = request.page_num.unwrap_or(0) as usize;
 
-    // Check if query is a UID pattern (e.g., "dhamma 1.01", "dhamma 1.01/dpd", "123/dpd").
-    // query_text_to_uid_field_query returns "uid:..." if it's a UID pattern; otherwise
-    // DpdLookup is the default (same as SuttaSearchWindow QML) — searches DPD headwords
-    // by lemma rather than a broad contains search.
+    // Auto-detect: query_text_to_uid_field_query returns "uid:..." for uid-like
+    // queries, routed to UidMatch; otherwise DpdLookup is the default (same as
+    // SuttaSearchWindow QML) — searches DPD headwords by lemma. The auto UidMatch
+    // is self-correcting: a human form (e.g. "dhamma 1.01") that doesn't match a
+    // stored uid yields 0 hits, so run_search_with_uid_fallback transparently
+    // re-runs the original query as DpdLookup (no silent 0-hit).
     let uid_query = query_text_to_uid_field_query(&query_text_orig);
-    let (query_text, mode) = if uid_query.starts_with("uid:") {
+    let was_uid_auto = uid_query.starts_with("uid:");
+    let (query_text, mode) = if was_uid_auto {
         (uid_query, SearchMode::UidMatch)
     } else {
         (query_text_orig.clone(), SearchMode::DpdLookup)
@@ -1180,8 +1315,10 @@ fn dict_combined_search(request: Json<ApiSearchRequest>, dbm: &State<Arc<DbManag
 
     info(&format!("dict_combined_search(): query='{}', page={}, mode={:?}", query_text, page_num, mode));
 
-    let params = build_search_params(&request, mode, &SearchArea::Dictionary);
-    run_search(dbm.inner(), query_text, params, SearchArea::Dictionary, page_num, deconstructor)
+    run_dict_combined_with_fallback(
+        dbm.inner(), &request, page_num,
+        was_uid_auto, query_text, mode, query_text_orig, deconstructor,
+    )
 }
 
 /// GET /suttas/<uid>
@@ -1285,8 +1422,72 @@ fn lookup_window_query_post(request: Json<LookupWindowRequest>, dbm: &State<Arc<
 /// GET /words/<uid>.json
 /// Get full dictionary word data as JSON for copying glossary information
 /// The .json extension is part of the path parameter
-#[get("/words/<uid_with_ext..>")]
-fn get_word_json(uid_with_ext: PathBuf) -> Json<Vec<serde_json::Value>> {
+/// Whether an opt-in `?verbose=` flag is truthy (`1` / `true`).
+fn is_verbose_flag(verbose: Option<&str>) -> bool {
+    matches!(verbose, Some(v) if v == "1" || v == "true")
+}
+
+/// Verbose envelope for a resolved word (opt-in `?verbose=1`). Pure (no DB).
+fn word_hit_verbose_envelope(uid: &str, canonical_uid: &str, result: &serde_json::Value) -> serde_json::Value {
+    serde_json::json!({
+        "found": true,
+        "query_uid": uid,
+        "canonical_uid": canonical_uid,
+        "result": result,
+    })
+}
+
+/// Verbose envelope for a missing word (opt-in `?verbose=1`). Pure (no DB): the
+/// hint lists the tried normalized form and points at `/health`.
+fn word_miss_verbose_envelope(uid: &str) -> serde_json::Value {
+    let normalized = normalize_human_word_uid(uid);
+    let tried = if normalized.is_empty() || normalized == uid {
+        uid.to_string()
+    } else {
+        format!("{}, {}", uid, normalized)
+    };
+    serde_json::json!({
+        "found": false,
+        "query_uid": uid,
+        "canonical_uid": serde_json::Value::Null,
+        "hint": format!("no word for this uid; tried {}. Is the source dict installed? See /health.", tried),
+    })
+}
+
+/// Shared body for the word-JSON routes: resolve `uid`, then return either the
+/// default bare array or (when `verbose`) a self-describing envelope.
+///
+/// Back-compat (Hard rule 2): the **default** (non-verbose) response is
+/// byte-identical to before — a one-element array on hit, the empty array `[]`
+/// on miss — so a body-reading client (e.g. an installed browser extension) is
+/// unaffected. The only added signal is the **status**: `200` on hit, `404` on
+/// miss (the `[]` body is still present). `?verbose=1` is a separate opt-in
+/// shape. See docs/localhost-api-search-endpoints.md.
+fn word_json_response(uid: &str, verbose: Option<&str>) -> (Status, Json<serde_json::Value>) {
+    let resolved = get_app_data().resolve_word_uid(uid);
+    let verbose = is_verbose_flag(verbose);
+
+    match resolved {
+        Some(rw) => {
+            if verbose {
+                (Status::Ok, Json(word_hit_verbose_envelope(uid, rw.canonical_uid(), rw.as_json())))
+            } else {
+                (Status::Ok, Json(serde_json::Value::Array(vec![rw.as_json().clone()])))
+            }
+        }
+        None => {
+            if verbose {
+                (Status::NotFound, Json(word_miss_verbose_envelope(uid)))
+            } else {
+                // Hard rule 2: keep the prior empty-array body on a miss.
+                (Status::NotFound, Json(serde_json::Value::Array(Vec::new())))
+            }
+        }
+    }
+}
+
+#[get("/words/<uid_with_ext..>?<verbose>")]
+fn get_word_json(uid_with_ext: PathBuf, verbose: Option<&str>) -> (Status, Json<serde_json::Value>) {
     // Convert path to forward slashes and remove .json extension
     let uid_str = pathbuf_to_forward_slash_string(&uid_with_ext);
     let uid = uid_str.trim_end_matches(".json");
@@ -1295,15 +1496,47 @@ fn get_word_json(uid_with_ext: PathBuf) -> Json<Vec<serde_json::Value>> {
 
     // Delegate to the shared resolver so the JSON route tolerates the same uid
     // forms as the HTML route (numeric "<id>/dpd", human "dhamma 1.01", etc.).
-    // The structured one-element-array success shape is preserved byte-for-byte
-    // (the two-lane invariant: "<id>/dpd" -> the dpd_headwords row, the
-    // human/lemma forms -> the dict_words row). See
-    // docs/localhost-api-search-endpoints.md and AppData::resolve_word_uid.
-    match get_app_data().resolve_word_uid(uid) {
-        Some(rw) => Json(vec![rw.as_json().clone()]),
-        // Word not found - return empty array
-        None => Json(Vec::new()),
-    }
+    // The two-lane invariant holds ("<id>/dpd" -> dpd_headwords row, human/lemma
+    // forms -> dict_words row). See AppData::resolve_word_uid.
+    word_json_response(uid, verbose)
+}
+
+/// GET /word.json?<uid>
+/// Encoding-agnostic variant of `/words/<uid..>.json`. Rocket decodes query
+/// strings fully (including `%2F` / `%20`), unlike the `<uid..>` path segments,
+/// so a caller can pass the uid exactly as it appears in a `SearchResult.uid`,
+/// with or without percent-encoding. Delegates to the same resolver as the path
+/// route; the existing `/words/<uid..>` route is unchanged. See
+/// docs/localhost-api-search-endpoints.md.
+#[get("/word.json?<uid>&<verbose>")]
+fn get_word_json_q(uid: &str, verbose: Option<&str>) -> (Status, Json<serde_json::Value>) {
+    let uid = uid.trim_end_matches(".json");
+    info(&format!("get_word_json_q(): uid={}", uid));
+
+    word_json_response(uid, verbose)
+}
+
+/// GET /word_html?<window_id>&<uid>
+/// Encoding-agnostic variant of `/get_word_html_by_uid/<window_id>/<uid..>`,
+/// delegating to the same resolver-backed renderer. The path route is unchanged.
+#[get("/word_html?<window_id>&<uid>")]
+fn get_word_html_q(window_id: &str, uid: &str) -> (Status, RawHtml<String>) {
+    info(&format!("get_word_html_q(): window_id: {}, uid: {}", window_id, uid));
+
+    word_html_response(window_id, uid)
+}
+
+/// GET /sutta_html?<window_id>&<uid>&<anchor>
+/// Encoding-agnostic variant of `/get_sutta_html_by_uid/<window_id>/<uid..>`,
+/// so a `%2F` / `%20` sutta uid has a tolerant query-param form. Sutta
+/// existence/normalization reuses `convert_verse_ref_to_sutta_uid` +
+/// `lookup_sutta_with_fallback` (not the word resolver), so verse refs,
+/// `/pli/ms` fallback and ranges resolve to the canonical uid before rendering.
+#[get("/sutta_html?<window_id>&<uid>&<anchor>")]
+fn get_sutta_html_q(window_id: &str, uid: &str, anchor: Option<&str>, dbm: &State<Arc<DbManager>>) -> (Status, RawHtml<String>) {
+    info(&format!("get_sutta_html_q(): window_id: {}, uid: {}", window_id, uid));
+
+    sutta_html_response(window_id, uid, anchor, dbm)
 }
 
 /// GET /sutta_titles_flat_completion_list
@@ -1385,6 +1618,9 @@ pub async extern "C" fn start_webserver() {
             open_sutta_by_uid,
             lookup_window_query_post,
             get_word_json,
+            get_word_json_q,
+            get_word_html_q,
+            get_sutta_html_q,
             sutta_titles_completion,
             dict_words_completion,
         ])
@@ -1504,5 +1740,37 @@ mod tests {
         assert_eq!(parse_search_area("Library"), Some(SearchArea::Library));
         assert_eq!(parse_search_area("Dictionary"), Some(SearchArea::Dictionary));
         assert_eq!(parse_search_area("nonsense"), None);
+    }
+
+    #[test]
+    fn test_is_verbose_flag() {
+        assert!(is_verbose_flag(Some("1")));
+        assert!(is_verbose_flag(Some("true")));
+        assert!(!is_verbose_flag(Some("0")));
+        assert!(!is_verbose_flag(Some("")));
+        assert!(!is_verbose_flag(None));
+    }
+
+    #[test]
+    fn test_word_miss_verbose_envelope_shape() {
+        // Unknown uid -> { found:false, query_uid, canonical_uid:null, hint }.
+        let env = word_miss_verbose_envelope("dhamma 1.01");
+        assert_eq!(env["found"], serde_json::json!(false));
+        assert_eq!(env["query_uid"], serde_json::json!("dhamma 1.01"));
+        assert_eq!(env["canonical_uid"], serde_json::Value::Null);
+        let hint = env["hint"].as_str().expect("hint should be a string");
+        // The hint lists the tried normalized form and points at /health.
+        assert!(hint.contains("dhamma-1-01/dpd"), "hint should mention the normalized form: {hint}");
+        assert!(hint.contains("/health"), "hint should point at /health: {hint}");
+    }
+
+    #[test]
+    fn test_word_hit_verbose_envelope_shape() {
+        let result = serde_json::json!({ "uid": "dhamma-1-01/dpd", "word": "dhamma 1.01" });
+        let env = word_hit_verbose_envelope("dhamma 1.01", "dhamma-1-01/dpd", &result);
+        assert_eq!(env["found"], serde_json::json!(true));
+        assert_eq!(env["query_uid"], serde_json::json!("dhamma 1.01"));
+        assert_eq!(env["canonical_uid"], serde_json::json!("dhamma-1-01/dpd"));
+        assert_eq!(env["result"], result);
     }
 }
