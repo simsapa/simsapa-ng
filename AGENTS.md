@@ -96,7 +96,9 @@ Notable feature docs:
   normalization in
   [text-processing-for-contains-match-and-fulltext-match-search.md](./docs/text-processing-for-contains-match-and-fulltext-match-search.md).
 - [Localhost API search endpoints](./docs/localhost-api-search-endpoints.md) —
-  the four Rocket search routes in `bridges/src/api.rs`: general `POST /search`
+  the **whole Rocket route surface** in `bridges/src/api.rs` (search, word/sutta
+  retrieval, GUI-navigation, assets), plus the **agent quick-start** (§0: search →
+  copy `uid` → fetch full HTML/JSON). The four search routes: general `POST /search`
   (area-specific default mode, exact `SearchMode`/`SearchArea` serde names,
   HTTP 400 on unknown mode/area), `POST /suttas_fulltext_search` (FulltextMatch),
   `POST /suttas_contains_search` (ContainsMatch), and `POST /dict_combined_search`
@@ -108,7 +110,20 @@ Notable feature docs:
   `DpdLookup` remap** (query_task rejects `Combined + Dictionary`), and the
   **lazy, idempotent, mode-gated `init_fulltext_searcher()`** in `run_search`
   (shared process-global searcher; not eager at `start_webserver()` to avoid
-  reconcile-write contention). Pairs with
+  reconcile-write contention). **Tolerance layer (2026-06):** one shared
+  `AppData::resolve_word_uid` resolver behind both the JSON (`/words/<uid>.json`,
+  `get_word_json`) and HTML (`render_word_html_by_uid`) word routes — tolerant of
+  human/display (`dhamma 1.01`), numeric (`34626/dpd`) and hyphenated
+  (`dhamma-1-01/dpd`) forms via `normalize_human_word_uid`, preserving the
+  **two-lane invariant** (numeric → `dpd_headwords` row, hyphenated → `dict_words`
+  row); **encoding-agnostic query-param twins** `/word.json?uid=` / `/word_html?…`
+  / `/sutta_html?…` (accept `%2F`, unlike the `<uid..>` path routes which 422);
+  **404-on-miss** with the body preserved (`[]` for JSON) + opt-in `?verbose=1`
+  envelope; the **self-correcting UID auto-detect** (`run_dict_combined_with_fallback`
+  / `run_search_with_uid_fallback`: a 0-hit auto-`UidMatch` re-runs as normalized
+  `UidMatch` → `DpdLookup` for dict, or the route's fallback mode for suttas — no
+  silent 0-hit); and the **`GET /health`** readiness snapshot (version, port,
+  db_paths, `fulltext_searcher_ready`, counts, languages, dict_sources). Pairs with
   [search-snippet-highlight-pipeline.md](./docs/search-snippet-highlight-pipeline.md).
 - [Releases info lookup and the embedded fallback JSON](./docs/releases-info-and-fallback.md) —
   how the app obtains **releases info** (the `github_repo` / `version_tag` used

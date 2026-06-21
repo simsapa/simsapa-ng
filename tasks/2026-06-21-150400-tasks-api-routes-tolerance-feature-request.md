@@ -285,7 +285,7 @@ The numeric `<id>/dpd` → HTML mapping therefore needs a runtime
   - [x] 5.2 Add count helpers (`suttas`, `dict_words`, `dpd_headwords`) on the respective DB modules (`COUNT(*)`), or reuse existing ones if present.
   - [x] 5.3 Define a `HealthInfo` serde struct and `#[get("/health")]` handler assembling version, port, db paths (via `pathbuf_to_forward_slash_string`), readiness, counts, languages, and `get_distinct_sources` as-is; register in `routes![...]`.
   - [x] 5.4 Document `/health` in §14 of the doc (done fully in Task 7) and verify with manual curl; build with `make build -B`.
-- [ ] 6.0 (OPTIONAL — deprioritized) `dict_sources` aborted-import labels (P6)
+- [~] 6.0 (OPTIONAL — deprioritized) `dict_sources` aborted-import labels (P6) — **SKIPPED (user decision):** test-suite artifact only, no user impact; won't do.
   - **Status (user clarification):** the `ssp_test_abort_partial_*` entries are
     **residue from running the test suite on the dev machine**, **not** an issue on
     real user installations. So P6 is **not required** for the feature's goal and
@@ -296,9 +296,9 @@ The numeric `<id>/dpd` → HTML mapping therefore needs a runtime
     `ssp_test_abort_partial_*` in `get_distinct_sources` (`dictionaries.rs`),
     keeping the existing empty-string filter + sort; otherwise close this task as
     "won't do — test-suite artifact only" and note it in the doc.
-- [ ] 7.0 Consistency nits, stale-comment fixes, and documentation rewrite (P7 + doc)
+- [x] 7.0 Consistency nits, stale-comment fixes, and documentation rewrite (P7 + doc)
   - **Spec / deps:** depends on Tasks 1–6 landing. No behaviour change beyond doc/comment clarity and optional naming.
-  - [ ] 7.1 Clarify the `GET /suttas/<uid>` GUI-navigation route in the doc (it pokes the GUI, returns no content) — document it clearly under §14.2; do **not** rename the path (the raw-uid `src-ts/helpers.ts` callers depend on it). Note the intentional optional `.json` on `get_word_json`.
-  - [ ] 7.2 Rewrite `docs/localhost-api-search-endpoints.md`: add the new `/word.json?<uid>` / `/word_html` / `/sutta_html` query-param routes and `/health`; replace the `%2F`-trap and silent-`[]` caveats (§12.2, §13.3) with the new tolerant behaviour and the 404/verbose semantics (noting the 404 still carries the prior `[]` body so body-reading clients are unaffected); document the self-correcting auto-detect (§5). Route names unchanged.
-  - [ ] 7.3 Add an agent-facing "how to search suttas and the dictionary, and retrieve complete HTML pages" walkthrough (search → copy `uid` → fetch full HTML/JSON), making the happy path obvious in one read.
-  - [ ] 7.4 Update the notable-docs entry for `localhost-api-search-endpoints.md` in `AGENTS.md` (the real file — `CLAUDE.md` is a symlink; writes through it are refused) to reflect the new tolerant routes; run `make test` (full suite) once, per the after-all-subtasks rule.
+  - [x] 7.1 Clarify the `GET /suttas/<uid>` GUI-navigation route in the doc (it pokes the GUI, returns no content) — document it clearly under §14.2; do **not** rename the path (the raw-uid `src-ts/helpers.ts` callers depend on it). Note the intentional optional `.json` on `get_word_json`.
+  - [x] 7.2 Rewrite `docs/localhost-api-search-endpoints.md`: add the new `/word.json?<uid>` / `/word_html` / `/sutta_html` query-param routes and `/health`; replace the `%2F`-trap and silent-`[]` caveats (§12.2, §13.3) with the new tolerant behaviour and the 404/verbose semantics (noting the 404 still carries the prior `[]` body so body-reading clients are unaffected); document the self-correcting auto-detect (§5). Route names unchanged.
+  - [x] 7.3 Add an agent-facing "how to search suttas and the dictionary, and retrieve complete HTML pages" walkthrough (search → copy `uid` → fetch full HTML/JSON), making the happy path obvious in one read.
+  - [x] 7.4 Update the notable-docs entry for `localhost-api-search-endpoints.md` in `AGENTS.md` (the real file — `CLAUDE.md` is a symlink; writes through it are refused) to reflect the new tolerant routes; run `make test` (full suite) once, per the after-all-subtasks rule.

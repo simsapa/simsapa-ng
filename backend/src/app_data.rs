@@ -419,8 +419,9 @@ impl AppData {
     /// 3. Rendering the sutta content with WINDOW_ID JavaScript context
     /// 4. Handling rendering errors gracefully with an error page
     ///
-    /// Used by both QML bridge (sutta_bridge.rs::get_sutta_html) and
-    /// API endpoint (api.rs::get_sutta_html_by_uid) to ensure consistent behavior.
+    /// Used by both QML bridge (sutta_bridge.rs::get_sutta_html) and the API
+    /// endpoint (api.rs::get_sutta_html_by_uid, via the shared
+    /// `sutta_html_response` helper) to ensure consistent behavior.
     ///
     /// The `show_references` parameter controls whether segment reference anchors are rendered.
     /// This should be true when the sutta was requested with an anchor ID to scroll to.
@@ -459,8 +460,11 @@ impl AppData {
     /// 5. Modifying HTML tags to include theme classes
     /// 6. Updating resource links to point to API endpoints
     ///
-    /// Used by both QML bridge (sutta_bridge.rs::get_word_html) and
-    /// API endpoint (api.rs::get_word_html_by_uid) to ensure consistent behavior.
+    /// Used by both QML bridge (sutta_bridge.rs::get_word_html) and the API
+    /// endpoint (api.rs::get_word_html_by_uid). Both the uid forms accepted and
+    /// the dict_words row reached are determined by the shared
+    /// `AppData::resolve_word_uid` resolver (which this delegates to), so the
+    /// HTML and JSON (api.rs::get_word_json) word routes stay in lockstep.
     pub fn render_word_html_by_uid(&self, window_id: &str, word_uid: &str) -> String {
         let app_settings = self.app_settings_cache.read().expect("Failed to read app settings");
         let body_class = app_settings.theme_name_as_string();
