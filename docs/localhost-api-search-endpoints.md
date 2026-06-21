@@ -5,8 +5,12 @@ and the matching `...-tasks-...` file).
 
 The app runs a local HTTP server (Rocket, `bridges/src/api.rs`, bound to
 `127.0.0.1:<api_port>`) used by the browser extension and other local clients.
-This document describes the four search endpoints it exposes, their request /
-response JSON, and the shared helpers behind them.
+
+This document covers the **whole route surface**. The four **search** endpoints
+and the **sutta/dictionary retrieval** routes are documented in detail (request /
+response JSON, parameter structs, curl examples) in §1–§13; **every other route**
+is catalogued with its purpose in the complete route reference (§14), with the
+remaining request/response structs in §15.
 
 All search routes reuse the in-app search path
 (`SearchQueryTask::new` + `results_page(page_num)` + `total_hits()`), so the
@@ -34,6 +38,14 @@ The three Suttas/general routes plus `/dict_combined_search` are mounted in the
 > (despite the name). It now runs real `FulltextMatch` (tantivy). No legacy alias
 > is kept; clients wanting literal substring matching use
 > `/suttas_contains_search`.
+
+> **Caveat — the Tantivy fulltext index is Pāli-stemmed AND
+> diacritic-insensitive.** `FulltextMatch` is best for *discovering* a lemma
+> across all its inflected case forms (best recall), but because the stemmer
+> folds diacritics, `nāvā` ("boat") also matches `nava` ("nine"). Treat fulltext
+> hits as candidates and **verify by retrieving the actual text** (see §13). When
+> you already know the exact wording, prefer `/suttas_contains_search` (literal
+> substring) for precision.
 
 ---
 
@@ -210,7 +222,7 @@ fields most clients use:
 
 | Field | Meaning |
 |-------|---------|
-| `uid` | Stable id of the row, e.g. `sn56.11/pli/ms`, `dhamma/dpd`, `42/dpd`. Use it with the navigation routes (`GET /suttas/<uid>`, `GET /words/<uid>.json`) or to re-query via `Uid Match` / `DPD ID Match`. |
+| `uid` | Stable id of the row, e.g. `sn56.11/pli/ms`, `dhamma/dpd`, `42/dpd`. Use it to fetch the full text (§13), with the GUI-navigation route `GET /suttas/<uid>`, or to re-query via `Uid Match` / `DPD ID Match`. |
 | `schema_name` | Source DB: `appdata`, `dictionaries`, or `dpd`. |
 | `table_name` | `suttas`, `dict_words`, `dpd_headwords`, `dpd_roots`, … |
 | `title` | Display title (sutta title or dictionary headword). |
@@ -339,3 +351,211 @@ A successful query that simply finds nothing returns HTTP 200 with
 error, which is logged server-side). If a `Fulltext Match` request unexpectedly
 returns empty on a freshly started instance, the Tantivy searcher init is
 covered in §8.
+
+## 13. Fetching full text after a search (not a search route)
+
+The search routes return only **snippets**. To read or verify the *full* text of
+a result — e.g. to confirm an exact Pāli pāda, or to extract a sentence in
+context after a fulltext hit (which may be a false positive, see §2's stemmer
+caveat) — use the GET render routes (`bridges/src/api.rs`), not the search
+endpoints. These return rendered HTML; strip the tags to get plain text.
+
+| Route | Returns |
+|-------|---------|
+| `GET /get_sutta_html_by_uid/<window_id>/<uid..>` | **Full sutta HTML** for a uid. `<window_id>` is any client id (e.g. `web`). Optional `?anchor=<id>` shows reference anchors and jumps to a segment. |
+| `GET /get_word_html_by_uid/<window_id>/<uid..>` | Full dictionary-word entry HTML for a word uid (e.g. `dhamma 1.01/dpd`). |
+
+```sh
+# Full sutta text (e.g. to verify an exact pāda in Snp 1.8, the Metta Sutta):
+curl -s "localhost:$PORT/get_sutta_html_by_uid/web/snp1.8/pli/ms"   # then strip HTML
+```
+
+> **`GET /suttas/<uid>` does NOT return text.** Despite the name it is a
+> browser-extension *navigation* route: it pops/raises the Simsapa GUI lookup
+> window for that uid and returns only a plain-text "the window should appear"
+> message. Use `get_sutta_html_by_uid` for the actual content.
+
+### 13.1 Parallel translations share the sutta number
+
+A Pāli sutta and its English translations share the numeric reference, differing
+only in the `lang`/`author` part of the uid:
+
+```
+snp1.8/pli/ms      → snp1.8/en/sujato   (also /en/bodhi, /en/thanissaro)
+```
+
+So once you have one uid you can fetch a translation by swapping the
+`/<lang>/<author>` suffix. Bhikkhu Sujato's HTML interleaves Pāli + English per
+segment, so fetching one edition lets you read both side by side. (Watch for
+edition variants in the source wording — e.g. the Maṅgala Sutta reads
+`pūjaneyyānaṁ` in SuttaCentral/MS but `pūjanīyānaṁ` in some chanting
+traditions.)
+
+### 13.2 Verifying dictionary facts (gender, part of speech)
+
+`POST /dict_combined_search` against DPD is the quickest way to confirm a Pāli
+word's grammatical gender / part of speech: the returned snippet carries the DPD
+grammar label, e.g. `{"query_text":"kaññā","dict_dict":"DPD"}` → a snippet
+showing `(fem) young girl … fem`. For the full entry, follow up with
+`GET /words/<uid>.json` (§13.3) or `GET /get_word_html_by_uid/...` (above).
+
+### 13.3 Full dictionary-word data as JSON
+
+`GET /words/<uid>.json` returns the **complete** word record as a JSON array
+(one element, or empty `[]` when not found) — the structured data behind a
+dictionary result, suitable for glossary export. The `.json` suffix is part of
+the path; the uid must be URL-encoded (`/` → `%2F`, space → `%20`).
+
+The route resolves the uid across three tables (`get_word_json`), returning the
+matching row serialized as-is:
+
+| uid shape | Source table | Example uid |
+|-----------|-------------|-------------|
+| ends `…/dpd` and numeric stem | `dpd_headwords` (dpd.sqlite3) | `34626/dpd` |
+| `√<root>/dpd` | `dpd_roots` (dpd.sqlite3) | `√kar/dpd` |
+| anything else (and `name N.NN/dpd` fallbacks) | `dict_words` (dictionaries.sqlite3) | `dhamma/ncped`, `dhamma 1.01/dpd` |
+
+```sh
+# DPD headword by numeric id
+curl -s "localhost:$PORT/words/34626%2Fdpd.json"
+
+# A dict_words entry (note %20 for the space, %2F for the slash)
+curl -s "localhost:$PORT/words/dhamma%201.01%2Fdpd.json"
+
+# Non-DPD dictionary entry
+curl -s "localhost:$PORT/words/dhamma%2Fncped.json"
+```
+
+The element shape is the serialized DB row (DPD headword JSON, DPD root JSON, or
+the `dict_words` `DictWord` model) — not the `SearchResult` of §11. Use a search
+route first to discover the uid, then this route for the full entry.
+
+## 14. Complete route reference
+
+Every route mounted in `start_webserver()`'s `routes![...]` (`bridges/src/api.rs`).
+Routes detailed earlier are cross-referenced; the rest are listed here with their
+purpose. Many of the GUI-navigation routes are **side-effecting**: they fire a
+`cxx-qt` `callback_*` into the running GUI (open a window/tab, navigate, toggle a
+mode) and return only an HTTP `Status` or a short plain-text message — they do
+**not** return content. They exist for the browser extension and in-app WebEngine
+views, not for headless data retrieval.
+
+### 14.1 Search & data retrieval (return JSON / HTML / text)
+
+| Method · Path | Purpose | Details |
+|---|---|---|
+| `POST /search` | General search, any mode + area | §1–§12 |
+| `POST /suttas_fulltext_search` | Suttas, FulltextMatch (tantivy) / Uid auto-detect | §1, §5, §12.1 |
+| `POST /suttas_contains_search` | Suttas, ContainsMatch (literal) / Uid auto-detect | §1, §12.1 |
+| `POST /dict_combined_search` | Dictionary, DpdLookup + deconstructor / Uid auto-detect | §1, §12.2 |
+| `GET /sutta_and_dict_search_options` | Filter option lists (`sutta_languages[]`, `dict_languages[]`, `dict_sources[]`) | §10; struct `SearchOptions` §15 |
+| `GET /get_sutta_html_by_uid/<window_id>/<uid..>?<anchor>` | Full rendered sutta HTML (text retrieval) | §13 |
+| `GET /get_word_html_by_uid/<window_id>/<uid..>` | Full rendered dictionary-word HTML | §13 |
+| `GET /words/<uid>.json` | Full dictionary-word record as JSON | §13.3 |
+| `GET /get_book_spine_item_html_by_uid/<window_id>/<spine_item_uid..>` | Full rendered Library-book chapter HTML, by spine-item uid | — |
+| `GET /book_pages/<book_uid>/<resource_path..>` | Rendered Library-book page HTML, by in-book resource path | — |
+| `GET /sutta_titles_flat_completion_list` | Autocomplete list of sutta titles. **Placeholder — returns `[]`** (the extension uses a bundled list) | — |
+| `GET /dict_words_flat_completion_list` | Autocomplete list of dictionary words. **Placeholder — returns `[]`** | — |
+
+### 14.2 GUI navigation (side-effecting; open/navigate windows)
+
+| Method · Path | Purpose |
+|---|---|
+| `GET /suttas/<uid..>` | Open a sutta in the GUI **lookup window**. Returns a plain-text "window should appear" message, *not* the text (use `get_sutta_html_by_uid`). 404 if not found. Accepts verse refs and range uids (see §14.4). |
+| `GET /open_sutta_window/<uid..>` | Open a sutta in a **new** sutta-search window. Returns `Status` (404 if not found). |
+| `GET /open_sutta_tab/<window_id>/<uid..>?<anchor>` | Open a sutta in a **new tab** of an existing window `window_id`, optionally scrolled to `anchor`. |
+| `POST /open_book_page_tab/<window_id>` | Open a Library-book page (parsed from a `/book_pages/...` URL, with optional `#anchor`) in a new tab. Body: `BookPageRequest` (§15). |
+| `GET /prev_sutta/<window_id>/<current_sutta_uid..>` | Navigate `window_id` to the previous sutta. |
+| `GET /next_sutta/<window_id>/<current_sutta_uid..>` | Navigate `window_id` to the next sutta. |
+| `GET /prev_chapter/<window_id>/<current_spine_item_uid..>` | Navigate `window_id` to the previous Library-book chapter. |
+| `GET /next_chapter/<window_id>/<current_spine_item_uid..>` | Navigate `window_id` to the next Library-book chapter. |
+| `GET /lookup_window_query/<text>` | Open the word-lookup window and run a query (text in the path). |
+| `POST /lookup_window_query` | Open the word-lookup window. If `query_text` is a word **uid** (contains `/`) it opens that entry directly (dict_words → DPD headword fallback); otherwise it runs a lookup search. Body: `LookupWindowRequest` (§15). |
+| `GET /summary_query/<window_id>/<text>` | Run a summary query in `window_id`. |
+| `POST /dppn_lookup` | Look up a proper name (DPPN — *Dictionary of Pāli Proper Names*) in `window_id`. Body: `DppnLookupRequest` (§15). |
+| `POST /sutta_menu_action` | Trigger a sutta context-menu action (selected-text action) in `window_id`. Body: `SuttaMenuRequest` (§15). |
+| `GET /toggle_reading_mode/<window_id>/<is_active>` | Toggle reading mode on/off (`is_active` = `true`/`false`) in `window_id`. |
+
+### 14.3 Static assets, resources & utility
+
+| Method · Path | Purpose |
+|---|---|
+| `GET /` | Liveness — minimal HTML page (see §10). |
+| `GET /shutdown` | Shut the webserver down (`Shutdown::notify`). Used by `shutdown_webserver` / `shutdown_webserver_tcp`. |
+| `GET /app-assets-list` | Debug HTML listing of the SIMSAPA_DIR and internal-storage directory trees. |
+| `GET /assets/<path..>` | Serve a bundled static asset (CSS/JS/fonts/images/pdf-viewer) from the embedded `assets/` dir. |
+| `GET /favicon.ico` | Serve the app icon as the favicon. |
+| `GET /book_resources/<book_uid>/<path..>` | Serve a binary resource (image/css/font/pdf) imported with a Library book, from the DB. |
+| `GET /dict_resources/<dict_id>/<path..>` | Serve a binary resource imported with a StarDict dictionary, keyed by numeric `dict_id`. |
+| `GET /get_pdf_viewer/<book_uid>` | Redirect/loader HTML that opens the bundled PDF.js viewer pointed at a book's `document.pdf` (browser testing). |
+| `POST /logger` | Write a message to the app log. Body: `LoggerRequest` (§15). |
+| `POST /copy_to_clipboard` | Copy text to the system clipboard (`text/plain`). Body: `CopyToClipboardRequest` (§15). |
+| `POST /open_external_url` | Open a URL in the system browser. Body: `OpenExternalUrlRequest` (§15). |
+
+### 14.4 Shared uid handling (sutta routes)
+
+The sutta GUI-open routes (`/suttas`, `/open_sutta_window`, `/open_sutta_tab`)
+share two helpers, so they accept more than a literal stored uid:
+
+- **Verse-reference conversion** (`convert_verse_ref_to_sutta_uid`): e.g.
+  `thag179/pli/ms` → `thag2.30/pli/ms`, `dhp34` → `dhp33-43/pli/ms`. A bare code
+  with no `/lang/author` defaults to `/pli/ms`.
+- **Fallback + range lookup** (`lookup_sutta_with_fallback`): if the exact uid
+  isn't found it retries the `…/pli/ms` edition, then looks for a stored **range**
+  sutta containing the reference (e.g. `sn45.92/pli/ms` → `sn45.92-95/pli/ms`).
+
+The search routes' reference auto-detect (§5) is a different mechanism
+(`query_text_to_uid_field_query`, query-string → `uid:` field query).
+
+## 15. Other request / response structs
+
+The four search routes share `ApiSearchRequest` / `ApiSearchResult` (§2, §7) and
+`SearchResult` rows (§11). The remaining routes use these smaller structs
+(`bridges/src/api.rs`); all are plain JSON objects.
+
+```rust
+// GET /sutta_and_dict_search_options  → response
+struct SearchOptions {
+    sutta_languages: Vec<String>,
+    dict_languages: Vec<String>,
+    dict_sources: Vec<String>,
+}
+
+// POST /lookup_window_query  ← request
+struct LookupWindowRequest { query_text: String }
+
+// POST /sutta_menu_action  ← request
+struct SuttaMenuRequest { window_id: String, action: String, text: String }
+
+// POST /dppn_lookup  ← request
+struct DppnLookupRequest { window_id: String, query: String }
+
+// POST /open_book_page_tab/<window_id>  ← request
+struct BookPageRequest { book_page_url: String }  // e.g. "/book_pages/<uid>/ch1.xhtml#sec2"
+
+// POST /logger  ← request
+struct LoggerRequest { log_level: String, msg: String }  // log_level: info|warn|error|profile
+
+// POST /copy_to_clipboard  ← request
+struct CopyToClipboardRequest { text: String }
+
+// POST /open_external_url  ← request
+struct OpenExternalUrlRequest { url: String }
+```
+
+`/words/<uid>.json` returns `Vec<serde_json::Value>` (the raw DB row, §13.3); the
+two `*_flat_completion_list` routes return `Vec<String>` (currently empty). The
+HTML routes (`get_*_html_by_uid`, `book_pages`, `get_pdf_viewer`, `index`,
+`app-assets-list`) return `RawHtml<String>`; the asset/resource routes return raw
+bytes with a `Content-Type`; the side-effecting GUI routes return a bare
+`Status`.
+
+```sh
+# Example: open a sutta entry directly in the lookup window by word uid
+curl -s -X POST "localhost:$PORT/lookup_window_query" \
+  -H 'Content-Type: application/json' -d '{"query_text":"dhamma 1.01/dpd"}'
+
+# Example: look up a proper name (DPPN) in window "web"
+curl -s -X POST "localhost:$PORT/dppn_lookup" \
+  -H 'Content-Type: application/json' -d '{"window_id":"web","query":"Anuruddha"}'
+```
