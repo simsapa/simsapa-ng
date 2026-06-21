@@ -15,13 +15,60 @@ use crate::logger::{warn, error, info, debug};
 use crate::types::SuttaQuote;
 use crate::app_settings::AppSettings;
 use crate::global_hotkeys::GlobalHotkeysConfig;
-use crate::helpers::{bilara_text_to_segments, bilara_line_by_line_html, bilara_content_json_to_html, thebuddhaswords_net_convert_links_in_html, word_uid_sanitize};
+use crate::helpers::{bilara_text_to_segments, bilara_line_by_line_html, bilara_content_json_to_html, thebuddhaswords_net_convert_links_in_html, word_uid_sanitize, normalize_human_word_uid};
+use crate::db::dictionaries_models::DictWord;
 use crate::html_content::{blank_html_page, sutta_html_page};
 use crate::{get_app_globals, init_app_globals};
 
 static DICTIONARY_JS: &str = include_str!("../../assets/js/dictionary.js");
 static DICTIONARY_CSS: &str = include_str!("../../assets/css/dictionary.css");
 static SIMSAPA_JS: &str = include_str!("../../assets/js/simsapa.min.js");
+
+/// Which table a resolved word came from. DPPN entries are a `DictWord` whose
+/// renderer branches on `dict_label`, not a separate kind.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ResolvedWordKind {
+    BoldDefinition,
+    DpdHeadword,
+    DpdRoot,
+    DictWord,
+}
+
+/// The outcome of `AppData::resolve_word_uid`: one word reached from any of the
+/// tolerated uid forms, carrying both views of that word (Finding 1 /
+/// `project-dpd-records-correlate-dict-words`). The `json_value` is the
+/// **structured** row the JSON route returns; `dict_word` is the correlated
+/// **rendered-HTML** `dict_words` row the HTML route renders (absent for a bold
+/// definition, which renders via its own path). See
+/// `docs/localhost-api-search-endpoints.md`.
+#[derive(Debug, Clone)]
+pub struct ResolvedWord {
+    canonical_uid: String,
+    kind: ResolvedWordKind,
+    json_value: serde_json::Value,
+    dict_word: Option<DictWord>,
+}
+
+impl ResolvedWord {
+    /// The stored uid this input resolved to.
+    pub fn canonical_uid(&self) -> &str {
+        &self.canonical_uid
+    }
+
+    pub fn kind(&self) -> ResolvedWordKind {
+        self.kind
+    }
+
+    /// The structured row for the JSON route (back-compat shape preserved).
+    pub fn as_json(&self) -> &serde_json::Value {
+        &self.json_value
+    }
+
+    /// The correlated `dict_words` row for the HTML route, if present.
+    pub fn html_dict_word(&self) -> Option<&DictWord> {
+        self.dict_word.as_ref()
+    }
+}
 
 /// Represents the application data and settings
 #[derive(Debug)]
@@ -415,8 +462,6 @@ impl AppData {
     /// Used by both QML bridge (sutta_bridge.rs::get_word_html) and
     /// API endpoint (api.rs::get_word_html_by_uid) to ensure consistent behavior.
     pub fn render_word_html_by_uid(&self, window_id: &str, word_uid: &str) -> String {
-        use regex::{Regex, Captures};
-
         let app_settings = self.app_settings_cache.read().expect("Failed to read app settings");
         let body_class = app_settings.theme_name_as_string();
 
@@ -427,27 +472,35 @@ impl AppData {
             return blank_page_html;
         }
 
-        // DPD bold-definitions use uids of the form "{bold_lc}/{ref_code_lc}"
-        // (with collision disambiguation) which overlap the dict_word uid
-        // namespace. Check bold_definitions first and route to the dedicated
-        // renderer if matched; otherwise fall through to dict_word rendering.
-        if let Some(bd) = self.dbm.dpd.get_bold_definition_by_uid(word_uid) {
-            return crate::html_content::render_bold_definition(&bd, window_id, Some(body_class.clone()));
-        }
+        // Resolve any tolerated uid form to one word, then dispatch by kind to
+        // the matching renderer. Bold definitions use their dedicated renderer;
+        // every other kind renders its correlated dict_words HTML row (DPD
+        // headword/root forms reach that row via lemma_1 / root sanitize). See
+        // resolve_word_uid and docs/localhost-api-search-endpoints.md.
+        let resolved = match self.resolve_word_uid(word_uid) {
+            Some(r) => r,
+            None => return blank_page_html,
+        };
 
-        // Try to get the word from database. The uid in dict_words is sanitized
-        // (spaces replaced with dashes). Callers in QML often build the uid by
-        // concatenating a DPD lemma_1 (which contains spaces, e.g. "gacchati 1")
-        // with "/dpd", producing "gacchati 1/dpd". Fall back to a sanitized uid
-        // so those reconstructions still resolve to the dict_words row.
-        let word = self.dbm.dictionaries.get_word(word_uid).or_else(|| {
-            let sanitized = word_uid_sanitize(word_uid).to_lowercase();
-            if sanitized != word_uid {
-                self.dbm.dictionaries.get_word(&sanitized)
-            } else {
-                None
+        match resolved.kind() {
+            ResolvedWordKind::BoldDefinition => {
+                match self.dbm.dpd.get_bold_definition_by_uid(resolved.canonical_uid()) {
+                    Some(bd) => crate::html_content::render_bold_definition(&bd, window_id, Some(body_class.clone())),
+                    None => blank_page_html,
+                }
             }
-        });
+            _ => match resolved.html_dict_word() {
+                Some(word) => self.render_dict_word_html(word, window_id, &body_class),
+                None => blank_page_html,
+            },
+        }
+    }
+
+    /// Render a resolved `dict_words` row to a full HTML page. Extracted from
+    /// `render_word_html_by_uid` so the resolver can dispatch to it; the body is
+    /// unchanged from the previous inline rendering.
+    fn render_dict_word_html(&self, word: &DictWord, window_id: &str, body_class: &str) -> String {
+        use regex::{Regex, Captures};
 
         lazy_static! {
             // (<link href=")(main.js)(") class="load_js" rel="preload" as="script">
@@ -465,8 +518,7 @@ impl AppData {
             static ref RE_SRC_ATTR: Regex = Regex::new(r#"src=['"]([^'"]+)['"]"#).unwrap();
         }
 
-        match word {
-            Some(word) => match word.definition_html {
+        match word.definition_html {
                 Some(ref definition_html) => {
                     // DPPN entries are stored as fragments wrapped in
                     // `<div class="dppn">…</div>` (see bootstrap/dppn.rs). They
@@ -475,9 +527,9 @@ impl AppData {
                     // dedicated full-page wrapper instead.
                     if word.dict_label == "dppn" {
                         return crate::html_content::render_dppn_entry(
-                            &word,
+                            word,
                             window_id,
-                            Some(body_class.clone()),
+                            Some(body_class.to_string()),
                         );
                     }
                     // DPD ships its resources as files under assets/dpd-res/ and
@@ -631,9 +683,7 @@ impl AppData {
 
                     word_html
                 },
-                None => blank_page_html.clone(),
-            },
-            None => blank_page_html,
+                None => blank_html_page(Some(body_class.to_string())),
         }
     }
 
@@ -934,6 +984,133 @@ impl AppData {
             Ok(_) => (),
             Err(e) => error(&format!("Failed to update app settings: {}", e)),
         }
+    }
+
+    /// Resolve any tolerated word-uid form onto the one canonical word, returning
+    /// both its structured row (for JSON) and its correlated `dict_words` HTML row
+    /// (for rendering). Shared by `get_word_json` (api.rs) and
+    /// `render_word_html_by_uid` so the two routes resolve the same set of forms.
+    ///
+    /// Two correlated lanes are preserved (Finding 8 / the two-lane invariant):
+    /// a numeric `<id>/dpd` keeps resolving to the **dpd_headwords** structured
+    /// row, while the human/lemma forms (`dhamma 1.01`, `dhamma 1.01/dpd`,
+    /// `dhamma-1-01/dpd`) resolve to the **dict_words** row `dhamma-1-01/dpd`.
+    /// The dpd -> dict_words correlation is via `lemma_1` / root sanitize, not a
+    /// uid string-equality join (there is no `dict_words` row with the numeric
+    /// uid). See `docs/localhost-api-search-endpoints.md`.
+    pub fn resolve_word_uid(&self, input_uid: &str) -> Option<ResolvedWord> {
+        let input = input_uid.trim().trim_end_matches(".json").trim();
+        if input.is_empty() {
+            return None;
+        }
+
+        // DPD bold-definitions use uids of the form "{bold_lc}/{ref_code_lc}"
+        // (with collision disambiguation) which overlap the dict_word uid
+        // namespace. Check bold_definitions first and route to the dedicated
+        // renderer if matched.
+        //
+        // a) Bold definitions first: their uids ("{bold_lc}/{ref_code_lc}")
+        //    overlap the dict_word namespace, so they must win the same way the
+        //    HTML renderer checks them first.
+        if let Some(bd) = self.dbm.dpd.get_bold_definition_by_uid(input) {
+            if let Ok(value) = serde_json::to_value(&bd) {
+                return Some(ResolvedWord {
+                    canonical_uid: input.to_string(),
+                    kind: ResolvedWordKind::BoldDefinition,
+                    json_value: value,
+                    dict_word: None,
+                });
+            }
+        }
+
+        // Try to get the word from database. The uid in dict_words is sanitized
+        // (spaces replaced with dashes). Callers in QML often build the uid by
+        // concatenating a DPD lemma_1 (which contains spaces, e.g. "gacchati 1")
+        // with "/dpd", producing "gacchati 1/dpd". Fall back to a sanitized uid
+        // so those reconstructions still resolve to the dict_words row.
+
+        // b) DPD structured rows (only forms ending in "/dpd").
+        if input.ends_with("/dpd") {
+            // Headword by uid (numeric "<id>/dpd"). Correlate to its dict_words
+            // HTML row via lemma_1 sanitize.
+            if let Some(json_str) = self.get_dpd_headword_by_uid(input) {
+                if let Ok(value) = serde_json::from_str::<serde_json::Value>(&json_str) {
+                    let dict_word = value
+                        .get("lemma_1")
+                        .and_then(|v| v.as_str())
+                        .and_then(|lemma| {
+                            let canonical = format!("{}/dpd", word_uid_sanitize(lemma).to_lowercase());
+                            self.dbm.dictionaries.get_word(&canonical)
+                        })
+                        .or_else(|| self.dbm.dictionaries.get_word(input));
+                    return Some(ResolvedWord {
+                        canonical_uid: input.to_string(),
+                        kind: ResolvedWordKind::DpdHeadword,
+                        json_value: value,
+                        dict_word,
+                    });
+                }
+            }
+
+            // Root by root key ("√kar/dpd" -> root key "√kar").
+            let root_key = input.trim_end_matches("/dpd");
+            if let Some(json_str) = self.get_dpd_root_by_root_key(root_key) {
+                if let Ok(value) = serde_json::from_str::<serde_json::Value>(&json_str) {
+                    // Undisambiguated roots have a dict_words row at the same uid;
+                    // disambiguated ones ("√path 1") do not, so this is best-effort
+                    // (matches the pre-existing HTML behaviour).
+                    let dict_word = self.dbm.dictionaries.get_word(input).or_else(|| {
+                        let sanitized = word_uid_sanitize(input).to_lowercase();
+                        if sanitized != input {
+                            self.dbm.dictionaries.get_word(&sanitized)
+                        } else {
+                            None
+                        }
+                    });
+                    return Some(ResolvedWord {
+                        canonical_uid: input.to_string(),
+                        kind: ResolvedWordKind::DpdRoot,
+                        json_value: value,
+                        dict_word,
+                    });
+                }
+            }
+        }
+
+        // c) dict_words direct, with the existing sanitize retry (preserves the
+        //    forms that already resolved, e.g. "dhamma-1-01/dpd", "dhamma/ncped").
+        if let Some(dw) = self.dbm.dictionaries.get_word(input).or_else(|| {
+            let sanitized = word_uid_sanitize(input).to_lowercase();
+            if sanitized != input {
+                self.dbm.dictionaries.get_word(&sanitized)
+            } else {
+                None
+            }
+        }) {
+            return self.dict_word_resolved(dw);
+        }
+
+        // d) Normalized human form (e.g. bare "dhamma 1.01" -> "dhamma-1-01/dpd").
+        let normalized = normalize_human_word_uid(input);
+        if !normalized.is_empty() && normalized != input {
+            if let Some(dw) = self.dbm.dictionaries.get_word(&normalized) {
+                return self.dict_word_resolved(dw);
+            }
+        }
+
+        None
+    }
+
+    /// Wrap a found `dict_words` row as a `ResolvedWord` (structured value =
+    /// rendered-HTML row, both lanes the same record for a plain dict word).
+    fn dict_word_resolved(&self, dw: DictWord) -> Option<ResolvedWord> {
+        let value = serde_json::to_value(&dw).ok()?;
+        Some(ResolvedWord {
+            canonical_uid: dw.uid.clone(),
+            kind: ResolvedWordKind::DictWord,
+            json_value: value,
+            dict_word: Some(dw),
+        })
     }
 
     pub fn get_dpd_headword_by_uid(&self, uid_str: &str) -> Option<String> {

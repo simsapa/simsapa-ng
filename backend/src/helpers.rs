@@ -1621,6 +1621,38 @@ pub fn word_uid_sanitize(word: &str) -> String {
     w
 }
 
+/// Normalize a human-entered word reference toward a stored dict_words / DPD uid.
+///
+/// The localhost API and search bar receive uids in the forms a human naturally
+/// has from a search result's display `title`, e.g. the numbered display form
+/// `dhamma 1.01`, the dotted/spaced `dhamma 1.01/dpd`, or an already-canonical
+/// `dhamma-1-01/dpd`. The stored uid is the sanitized, hyphenated form. This
+/// maps every such form onto its best-guess canonical uid:
+///
+/// - trims a trailing `.json` (the optional extension `get_word_json` accepts);
+/// - if the input already carries a `/<label>` suffix, sanitizes in place,
+///   keeping the slash (`dhamma 1.01/dpd` -> `dhamma-1-01/dpd`,
+///   `dhamma/ncped` -> `dhamma/ncped`, numeric `34626/dpd` unchanged);
+/// - otherwise treats it as a bare DPD headword display form and appends `/dpd`
+///   (`dhamma 1.01` -> `dhamma-1-01/dpd`).
+///
+/// Pure and side-effect free so it can be unit-tested in isolation; the actual
+/// DB lookups live in `AppData::resolve_word_uid`. See
+/// `docs/localhost-api-search-endpoints.md`.
+pub fn normalize_human_word_uid(input: &str) -> String {
+    let trimmed = input.trim().trim_end_matches(".json").trim();
+    if trimmed.is_empty() {
+        return String::new();
+    }
+    if trimmed.contains('/') {
+        // Already has a dictionary label; sanitize but keep the slash.
+        word_uid_sanitize(trimmed).to_lowercase()
+    } else {
+        // Bare display form (e.g. "dhamma 1.01"); assume a DPD headword.
+        format!("{}/dpd", word_uid_sanitize(trimmed).to_lowercase())
+    }
+}
+
 /// Create a UID by combining sanitized word and dictionary label.
 pub fn word_uid(word: &str, dict_label: &str) -> String {
     format!("{}/{}",
@@ -2503,6 +2535,26 @@ pub fn analyze_sqlite_db_via_cli(db_path: &Path) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_normalize_human_word_uid() {
+        // Bare numbered display form -> hyphenated DPD uid.
+        assert_eq!(normalize_human_word_uid("dhamma 1.01"), "dhamma-1-01/dpd");
+        // Dotted/spaced form with a label -> sanitized, slash kept.
+        assert_eq!(normalize_human_word_uid("dhamma 1.01/dpd"), "dhamma-1-01/dpd");
+        // Already canonical -> unchanged.
+        assert_eq!(normalize_human_word_uid("dhamma-1-01/dpd"), "dhamma-1-01/dpd");
+        // Numeric DPD headword uid -> unchanged.
+        assert_eq!(normalize_human_word_uid("34626/dpd"), "34626/dpd");
+        // Non-DPD label preserved.
+        assert_eq!(normalize_human_word_uid("dhamma/ncped"), "dhamma/ncped");
+        // Trailing .json extension trimmed.
+        assert_eq!(normalize_human_word_uid("dhamma-1-01/dpd.json"), "dhamma-1-01/dpd");
+        // Uppercase normalized to lowercase.
+        assert_eq!(normalize_human_word_uid("Dhamma/NCPED"), "dhamma/ncped");
+        // Empty / whitespace -> empty.
+        assert_eq!(normalize_human_word_uid("   "), "");
+    }
 
     #[test]
     fn test_dpd_sutta_code_display() {

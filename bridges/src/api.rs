@@ -1286,51 +1286,24 @@ fn lookup_window_query_post(request: Json<LookupWindowRequest>, dbm: &State<Arc<
 /// Get full dictionary word data as JSON for copying glossary information
 /// The .json extension is part of the path parameter
 #[get("/words/<uid_with_ext..>")]
-fn get_word_json(uid_with_ext: PathBuf, dbm: &State<Arc<DbManager>>) -> Json<Vec<serde_json::Value>> {
+fn get_word_json(uid_with_ext: PathBuf) -> Json<Vec<serde_json::Value>> {
     // Convert path to forward slashes and remove .json extension
     let uid_str = pathbuf_to_forward_slash_string(&uid_with_ext);
     let uid = uid_str.trim_end_matches(".json");
 
     info(&format!("get_word_json(): uid={}", uid));
 
-    let app_data = get_app_data();
-
-    // Determine word type based on UID pattern:
-    // - DPD headwords: end with "/dpd" (e.g., "dhamma 1/dpd" or numeric id patterns)
-    // - DPD roots: contain "roots/" pattern (e.g., "√kar/dpd")
-    // - dict_words: everything else (e.g., "dhamma/ncped")
-
-    if uid.ends_with("/dpd") {
-        // Try DPD headword first (uses numeric IDs like "34626/dpd")
-        if let Some(json_str) = app_data.get_dpd_headword_by_uid(uid)
-            && let Ok(value) = serde_json::from_str::<serde_json::Value>(&json_str) {
-                return Json(vec![value]);
-            }
-
-        // If not found as headword, try as root (roots have format like "√kar/dpd")
-        // Extract root key by removing "/dpd" suffix
-        let root_key = uid.trim_end_matches("/dpd");
-        if let Some(json_str) = app_data.get_dpd_root_by_root_key(root_key)
-            && let Ok(value) = serde_json::from_str::<serde_json::Value>(&json_str) {
-                return Json(vec![value]);
-            }
-
-        // If not found in dpd.sqlite3, try dict_words table in dictionaries.sqlite3
-        // This handles UIDs like "dhamma 1.01/dpd" which are stored in dict_words
-        if let Some(dict_word) = dbm.dictionaries.get_word(uid)
-            && let Ok(value) = serde_json::to_value(&dict_word) {
-                return Json(vec![value]);
-            }
-    } else {
-        // Try dict_words table for non-DPD entries (e.g., "dhamma/ncped")
-        if let Some(dict_word) = dbm.dictionaries.get_word(uid)
-            && let Ok(value) = serde_json::to_value(&dict_word) {
-                return Json(vec![value]);
-            }
+    // Delegate to the shared resolver so the JSON route tolerates the same uid
+    // forms as the HTML route (numeric "<id>/dpd", human "dhamma 1.01", etc.).
+    // The structured one-element-array success shape is preserved byte-for-byte
+    // (the two-lane invariant: "<id>/dpd" -> the dpd_headwords row, the
+    // human/lemma forms -> the dict_words row). See
+    // docs/localhost-api-search-endpoints.md and AppData::resolve_word_uid.
+    match get_app_data().resolve_word_uid(uid) {
+        Some(rw) => Json(vec![rw.as_json().clone()]),
+        // Word not found - return empty array
+        None => Json(Vec::new()),
     }
-
-    // Word not found - return empty array
-    Json(Vec::new())
 }
 
 /// GET /sutta_titles_flat_completion_list
