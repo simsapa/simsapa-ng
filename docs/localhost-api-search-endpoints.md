@@ -310,10 +310,12 @@ curl -s -X POST "localhost:$PORT/search" \
 curl -s -X POST "localhost:$PORT/dict_combined_search" \
   -H 'Content-Type: application/json' -d '{"query_text":"buddhadhamma"}'
 
-# By dictionary word UID → auto-detected as Uid Match.
-# Patterns like "dhamma 1.01", "dhamma 1.01/dpd", or a bare "<n>/dpd" id.
+# By dictionary word UID → auto-detected as Uid Match. Use the EXACT uid from a
+# SearchResult's `uid` field: the numeric headword id "34626/dpd" or the
+# hyphenated dict_words form "dhamma-1-01/dpd". The display title ("dhamma 1.01")
+# and a space-and-dot uid ("dhamma 1.01/dpd") do NOT match (0 hits).
 curl -s -X POST "localhost:$PORT/dict_combined_search" \
-  -H 'Content-Type: application/json' -d '{"query_text":"dhamma 1.01/dpd"}'
+  -H 'Content-Type: application/json' -d '{"query_text":"dhamma-1-01/dpd"}'
 
 # By DPD headword numeric id, explicitly via /search:
 #   "DPD ID Match"  — query_text is the numeric DPD headword id
@@ -333,8 +335,9 @@ curl -s -X POST "localhost:$PORT/dict_combined_search" \
   -H 'Content-Type: application/json' \
   -d '{"query_text":"dhamma","dict_lang":"en","dict_lang_include":true,"dict_dict":"PTS","dict_dict_include":true}'
 
-# After a search, fetch the full word entry as JSON (for glossary export):
-curl -s "localhost:$PORT/words/dhamma%201.01%2Fdpd.json"
+# After a search, fetch the full word entry as JSON (for glossary export).
+# Use the exact uid from the SearchResult; raw / separator, hyphenated stem (§13.3).
+curl -s "localhost:$PORT/words/dhamma-1-01/dpd.json"
 ```
 
 ### 12.3 Error handling
@@ -363,12 +366,19 @@ endpoints. These return rendered HTML; strip the tags to get plain text.
 | Route | Returns |
 |-------|---------|
 | `GET /get_sutta_html_by_uid/<window_id>/<uid..>` | **Full sutta HTML** for a uid. `<window_id>` is any client id (e.g. `web`). Optional `?anchor=<id>` shows reference anchors and jumps to a segment. |
-| `GET /get_word_html_by_uid/<window_id>/<uid..>` | Full dictionary-word entry HTML for a word uid (e.g. `dhamma 1.01/dpd`). |
+| `GET /get_word_html_by_uid/<window_id>/<uid..>` | Full dictionary-word entry HTML for a word uid (e.g. `dhamma-1-01/dpd`). Tolerates looser uid forms than the JSON route — see §13.3 gotcha 4. |
 
 ```sh
 # Full sutta text (e.g. to verify an exact pāda in Snp 1.8, the Metta Sutta):
 curl -s "localhost:$PORT/get_sutta_html_by_uid/web/snp1.8/pli/ms"   # then strip HTML
+
+# Full word HTML — pass the uid's / as a raw slash, NOT %2F (see §13.3):
+curl -s "localhost:$PORT/get_word_html_by_uid/web/dhamma/ncped"     # then strip HTML
 ```
+
+> **Pass the uid with raw `/` separators, not `%2F`.** Both these GET routes
+> capture the uid as a multi-segment `<uid..>` path parameter; an encoded `%2F`
+> is rejected by Rocket with HTTP 422. See §13.3.
 
 > **`GET /suttas/<uid>` does NOT return text.** Despite the name it is a
 > browser-extension *navigation* route: it pops/raises the Simsapa GUI lookup
@@ -404,31 +414,61 @@ showing `(fem) young girl … fem`. For the full entry, follow up with
 `GET /words/<uid>.json` returns the **complete** word record as a JSON array
 (one element, or empty `[]` when not found) — the structured data behind a
 dictionary result, suitable for glossary export. The `.json` suffix is part of
-the path; the uid must be URL-encoded (`/` → `%2F`, space → `%20`).
+the path.
+
+**Pass the uid's internal `/` separator as a raw, literal `/`** — do **not**
+percent-encode it as `%2F`. These routes capture the uid as a multi-segment
+trailing path parameter (`<uid..>`, a `PathBuf`); Rocket rejects an encoded
+`%2F` in such a segment as a path-traversal safeguard and returns **HTTP 422**.
+Only genuinely-unsafe characters need encoding — e.g. a space as `%20`. (The
+sutta route `GET /get_sutta_html_by_uid/<window_id>/<uid..>` works the same way:
+its `sn22.59/pli/ms`-style uids are passed with raw slashes.)
 
 The route resolves the uid across three tables (`get_word_json`), returning the
 matching row serialized as-is:
 
-| uid shape | Source table | Example uid |
-|-----------|-------------|-------------|
+| uid shape | Source table | Verified example uid |
+|-----------|-------------|----------------------|
 | ends `…/dpd` and numeric stem | `dpd_headwords` (dpd.sqlite3) | `34626/dpd` |
 | `√<root>/dpd` | `dpd_roots` (dpd.sqlite3) | `√kar/dpd` |
-| anything else (and `name N.NN/dpd` fallbacks) | `dict_words` (dictionaries.sqlite3) | `dhamma/ncped`, `dhamma 1.01/dpd` |
+| anything else | `dict_words` (appdata / dictionaries) | `dhamma-1-01/dpd`, `dhammamaccharī/dpd` |
 
 ```sh
-# DPD headword by numeric id
-curl -s "localhost:$PORT/words/34626%2Fdpd.json"
+# DPD headword by numeric id (raw / separator)
+curl -s "localhost:$PORT/words/34626/dpd.json"
 
-# A dict_words entry (note %20 for the space, %2F for the slash)
-curl -s "localhost:$PORT/words/dhamma%201.01%2Fdpd.json"
+# DPD root
+curl -s "localhost:$PORT/words/√kar/dpd.json"
 
-# Non-DPD dictionary entry
-curl -s "localhost:$PORT/words/dhamma%2Fncped.json"
+# A dict_words entry — note the HYPHENATED stem (dhamma-1-01, not "dhamma 1.01")
+curl -s "localhost:$PORT/words/dhamma-1-01/dpd.json"
 ```
 
 The element shape is the serialized DB row (DPD headword JSON, DPD root JSON, or
-the `dict_words` `DictWord` model) — not the `SearchResult` of §11. Use a search
-route first to discover the uid, then this route for the full entry.
+the `dict_words` `DictWord` model) — not the `SearchResult` of §11.
+
+> **Gotchas — read before using `/words/<uid>.json`:**
+>
+> 1. **Always discover the uid from a search first; never hand-build it.** This
+>    route is an **exact-uid lookup with no fuzzy fallback**. Run a search
+>    (e.g. `POST /dict_combined_search`, §12.2) and copy the `uid` field from a
+>    `SearchResult` verbatim — that is the only reliable way to get a uid that
+>    resolves.
+> 2. **The numbered-headword uid is hyphenated, not the display title.** A DPD
+>    result whose `title` shows `dhamma 1.01` has uid **`34626/dpd`** (numeric)
+>    or, in `dict_words`, **`dhamma-1-01/dpd`** (hyphens, no space or dot). A
+>    space-and-dot form like `dhamma 1.01/dpd` routes fine (HTTP 200) but
+>    resolves nothing → `[]`. There is no `name N.NN/dpd` → record fallback.
+> 3. **`[]` (HTTP 200, 2 bytes) means "no such uid", not an error.** Most often
+>    it is a hand-built/wrong-form uid (gotcha 2) or a dictionary that is not
+>    installed — e.g. `dhamma/ncped` returns `[]` here because `ncped` is not in
+>    `dict_sources` (check `GET /sutta_and_dict_search_options`; this build has
+>    only `dpd`, `dppn`). Confirm the source dict exists before expecting data.
+> 4. **The HTML route is more forgiving than the JSON route.**
+>    `GET /get_word_html_by_uid/<window_id>/<uid..>` can render an entry for a
+>    uid that `/words/<uid>.json` returns `[]` for (e.g. `dhamma/ncped`). If you
+>    only need to read the entry, the HTML route (then strip tags) is a sturdier
+>    fallback; use the JSON route only when you need the structured fields.
 
 ## 14. Complete route reference
 
@@ -553,7 +593,7 @@ bytes with a `Content-Type`; the side-effecting GUI routes return a bare
 ```sh
 # Example: open a sutta entry directly in the lookup window by word uid
 curl -s -X POST "localhost:$PORT/lookup_window_query" \
-  -H 'Content-Type: application/json' -d '{"query_text":"dhamma 1.01/dpd"}'
+  -H 'Content-Type: application/json' -d '{"query_text":"dhamma-1-01/dpd"}'
 
 # Example: look up a proper name (DPPN) in window "web"
 curl -s -X POST "localhost:$PORT/dppn_lookup" \
