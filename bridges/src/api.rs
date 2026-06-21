@@ -1419,9 +1419,6 @@ fn lookup_window_query_post(request: Json<LookupWindowRequest>, dbm: &State<Arc<
     Status::Ok
 }
 
-/// GET /words/<uid>.json
-/// Get full dictionary word data as JSON for copying glossary information
-/// The .json extension is part of the path parameter
 /// Whether an opt-in `?verbose=` flag is truthy (`1` / `true`).
 fn is_verbose_flag(verbose: Option<&str>) -> bool {
     matches!(verbose, Some(v) if v == "1" || v == "true")
@@ -1560,6 +1557,67 @@ fn dict_words_completion() -> Json<Vec<String>> {
     Json(Vec::new())
 }
 
+/// Row counts for `/health`. Each is `Option`: `null` means the count query
+/// errored (Finding 5), a real `0` means the DB is loaded but empty / not
+/// installed (consistent with `fulltext_searcher_ready: false`).
+#[derive(Debug, Clone, Serialize)]
+pub struct HealthCounts {
+    pub suttas: Option<i64>,
+    pub dict_words: Option<i64>,
+    pub dpd_headwords: Option<i64>,
+}
+
+/// Absolute on-disk DB paths (forward-slash normalized) for `/health`.
+#[derive(Debug, Clone, Serialize)]
+pub struct HealthDbPaths {
+    pub appdata: String,
+    pub dictionaries: String,
+    pub dpd: String,
+}
+
+/// The `/health` document: a single read-once snapshot of the running instance.
+#[derive(Debug, Clone, Serialize)]
+pub struct HealthInfo {
+    pub app_version: String,
+    pub api_port: i32,
+    pub db_paths: HealthDbPaths,
+    pub fulltext_searcher_ready: bool,
+    pub counts: HealthCounts,
+    pub sutta_languages: Vec<String>,
+    pub dict_sources: Vec<String>,
+}
+
+/// GET /health
+/// Environment / readiness snapshot so a headless caller can learn version,
+/// live port, DB paths, fulltext-searcher readiness, row counts, languages and
+/// dictionary sources in one call (instead of probing several endpoints).
+/// `GET /` stays the landing page. See docs/localhost-api-search-endpoints.md.
+#[get("/health")]
+fn health(dbm: &State<Arc<DbManager>>) -> Json<HealthInfo> {
+    let g = get_app_globals_api();
+
+    let info_doc = HealthInfo {
+        app_version: simsapa_backend::update_checker::get_app_version(),
+        api_port: g.api_port,
+        db_paths: HealthDbPaths {
+            appdata: pathbuf_to_forward_slash_string(&g.paths.appdata_abs_path),
+            dictionaries: pathbuf_to_forward_slash_string(&g.paths.dict_abs_path),
+            dpd: pathbuf_to_forward_slash_string(&g.paths.dpd_abs_path),
+        },
+        fulltext_searcher_ready: simsapa_backend::is_fulltext_searcher_ready(),
+        // A count error -> None -> null (Finding 5); a real empty DB -> Some(0).
+        counts: HealthCounts {
+            suttas: dbm.appdata.count_suttas().ok(),
+            dict_words: dbm.dictionaries.count_dict_words().ok(),
+            dpd_headwords: dbm.dpd.count_dpd_headwords().ok(),
+        },
+        sutta_languages: dbm.appdata.get_sutta_languages(),
+        dict_sources: dbm.dictionaries.get_distinct_sources(),
+    };
+
+    Json(info_doc)
+}
+
 #[rocket::main]
 #[unsafe(no_mangle)]
 pub async extern "C" fn start_webserver() {
@@ -1623,6 +1681,7 @@ pub async extern "C" fn start_webserver() {
             get_sutta_html_q,
             sutta_titles_completion,
             dict_words_completion,
+            health,
         ])
         .manage(assets_files)
         .manage(db_manager)

@@ -201,6 +201,14 @@ impl DictionariesDbHandle {
         }
     }
 
+    /// Count all `dict_words` rows (for `/health`). A 0 here means the
+    /// dictionaries DB is not loaded / not installed.
+    pub fn count_dict_words(&self) -> Result<i64> {
+        use crate::db::dictionaries_schema::dict_words::dsl::*;
+        self.do_read(|db_conn| dict_words.count().get_result::<i64>(db_conn))
+            .context("count_dict_words failed")
+    }
+
     /// Count `dict_words` rows belonging to a given dictionary.
     pub fn count_words_for_dictionary(&self, dict_id: i32) -> Result<i64> {
         use crate::db::dictionaries_schema::dict_words::dsl::*;

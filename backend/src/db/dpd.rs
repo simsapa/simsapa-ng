@@ -63,6 +63,14 @@ fn uid_like_patterns(
 }
 
 impl DpdDbHandle {
+    /// Count `dpd_headwords` rows (for `/health`). A 0 here means the DPD DB
+    /// is not loaded / not installed.
+    pub fn count_dpd_headwords(&self) -> Result<i64> {
+        use crate::db::dpd_schema::dpd_headwords::dsl::*;
+        self.do_read(|db_conn| dpd_headwords.count().get_result::<i64>(db_conn))
+            .context("count_dpd_headwords failed")
+    }
+
     /// Map an inflected word form to headwords. Optionally pushes uid
     /// prefix / suffix filters into the dpd_headwords lookup so the caller
     /// doesn't have to post-filter.

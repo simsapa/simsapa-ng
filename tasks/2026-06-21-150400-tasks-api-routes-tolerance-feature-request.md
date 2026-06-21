@@ -73,6 +73,8 @@ routes are exercised in-app.
 - `backend/src/db/dpd_models.rs` - **(Task 1)** added `serde::Serialize` to `BoldDefinition` so the resolver's JSON lane can return bold-definition structured rows.
 - `backend/tests/test_resolve_word_uid.rs` - **(Task 1)** new integration test for `resolve_word_uid` two-lane invariant + HTML parity (live DB).
 - `backend/tests/test_uid_autodetect_fallback.rs` - **(Task 4)** integration test pinning the self-correcting fallback premise: `dhamma 1.01` auto-UidMatch + raw DpdLookup both 0, normalized UidMatch (`uid:dhamma-1-01/dpd`) ≥1 (live DB). The bridges glue (`run_dict_combined_with_fallback` / `run_search_with_uid_fallback`) can't be unit-tested directly (cxx-qt linking).
+- `backend/tests/test_health_counts.rs` - **(Task 5)** smoke test that `count_suttas` / `count_dict_words` / `count_dpd_headwords` run on the real schema and return non-zero (live DB).
+- `backend/src/db/appdata.rs` / `backend/src/db/dictionaries.rs` / `backend/src/db/dpd.rs` - **(Task 5)** added `count_suttas` / `count_dict_words` / `count_dpd_headwords` row-count helpers for `/health`.
 - `backend/src/lib.rs` - **(Task 1)** `init_app_globals` / `init_app_data` converted to race-free `get_or_init` (the prior `get().is_none()` + `set().expect()` pattern aborted under parallel integration-test init). Also home for P5's `is_fulltext_searcher_ready()`.
 
 ### Notes
@@ -277,12 +279,12 @@ The numeric `<id>/dpd` → HTML mapping therefore needs a runtime
   - [x] 4.3 For the named suttas routes (`run_suttas_search`, `api.rs:1056`): when reference auto-detect → `UidMatch` returns 0 hits, fall back to the route's `fallback_mode` (`FulltextMatch` / `ContainsMatch`), using the same clone-before-call pattern (Finding 2). Optionally normalize the detected uid via Task 1.3 first.
   - [x] 4.4 Update the two stale comments (`api.rs:1162` and `api.rs:1319`) to describe the real, now-self-correcting behaviour.
   - [x] 4.5 Add `mod tests` / manual-curl note asserting `{"query_text":"dhamma 1.01"}` to `/dict_combined_search` returns ≥1 hit; build with `make build -B`.
-- [ ] 5.0 Add a `GET /health` environment/readiness endpoint (P5)
+- [x] 5.0 Add a `GET /health` environment/readiness endpoint (P5)
   - **Spec / deps:** a single read-once JSON document: `app_version` (`update_checker::get_app_version`), `api_port` + `db_paths` (`AppGlobalPaths`), `fulltext_searcher_ready`, `counts` (suttas / dict_words / dpd_headwords), `sutta_languages`, `dict_sources` (from `get_distinct_sources` as-is; Task 6 is optional/deprioritized). New route only; `GET /` stays the landing page.
-  - [ ] 5.1 Add `is_fulltext_searcher_ready() -> bool` in `backend/src/lib.rs` (reads `FULLTEXT_SEARCHER` `RwLock`, returns `guard.is_some()` — no throwaway query).
-  - [ ] 5.2 Add count helpers (`suttas`, `dict_words`, `dpd_headwords`) on the respective DB modules (`COUNT(*)`), or reuse existing ones if present.
-  - [ ] 5.3 Define a `HealthInfo` serde struct and `#[get("/health")]` handler assembling version, port, db paths (via `pathbuf_to_forward_slash_string`), readiness, counts, languages, and `get_distinct_sources` as-is; register in `routes![...]`.
-  - [ ] 5.4 Document `/health` in §14 of the doc (done fully in Task 7) and verify with manual curl; build with `make build -B`.
+  - [x] 5.1 Add `is_fulltext_searcher_ready() -> bool` in `backend/src/lib.rs` (reads `FULLTEXT_SEARCHER` `RwLock`, returns `guard.is_some()` — no throwaway query).
+  - [x] 5.2 Add count helpers (`suttas`, `dict_words`, `dpd_headwords`) on the respective DB modules (`COUNT(*)`), or reuse existing ones if present.
+  - [x] 5.3 Define a `HealthInfo` serde struct and `#[get("/health")]` handler assembling version, port, db paths (via `pathbuf_to_forward_slash_string`), readiness, counts, languages, and `get_distinct_sources` as-is; register in `routes![...]`.
+  - [x] 5.4 Document `/health` in §14 of the doc (done fully in Task 7) and verify with manual curl; build with `make build -B`.
 - [ ] 6.0 (OPTIONAL — deprioritized) `dict_sources` aborted-import labels (P6)
   - **Status (user clarification):** the `ssp_test_abort_partial_*` entries are
     **residue from running the test suite on the dev machine**, **not** an issue on

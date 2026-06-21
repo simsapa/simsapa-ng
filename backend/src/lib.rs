@@ -341,6 +341,14 @@ pub fn reinit_fulltext_searcher() {
     }
 }
 
+/// Whether the process-global fulltext searcher has been initialized (the
+/// Tantivy indexes are open). Lets a headless caller learn — via `/health` —
+/// whether a `FulltextMatch` / `Combined` query will return real results yet,
+/// without running a throwaway query. See docs/localhost-api-search-endpoints.md.
+pub fn is_fulltext_searcher_ready() -> bool {
+    FULLTEXT_SEARCHER.read().map(|g| g.is_some()).unwrap_or(false)
+}
+
 /// Get the fulltext searcher if initialized.
 /// Returns a read guard that holds the searcher reference.
 pub fn with_fulltext_searcher<F, R>(f: F) -> Option<R>
