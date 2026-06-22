@@ -81,6 +81,10 @@ WORD_FIELDS = (
 # tag-stripping leaves them behind. Mirror backend strip_html() and drop them.
 RE_THUMBS = re.compile(r"[\U0001F44D\U0001F44E]+")
 
+# ANSI color used to highlight matched terms in `«…»` markers (bold yellow).
+COLOR_MATCH = "\033[1;33m"
+COLOR_RESET = "\033[0m"
+
 
 def strip_html(text, mark_matches=True):
     """Strip HTML tags. `<span class='match'>X</span>` -> `«X»` when marking."""
@@ -99,6 +103,17 @@ def strip_html(text, mark_matches=True):
     text = re.sub(r"[ \t]+", " ", text)
     text = re.sub(r"\s*\n\s*\n\s*", "\n\n", text)
     return text.strip()
+
+
+# Matched terms wrapped in `«…»` markers by strip_html() (or already present in
+# rendered HTML). Used to apply color after clipping so the ANSI escapes never
+# affect length counting or get truncated mid-sequence.
+RE_MARK = re.compile(r"«(.*?)»", re.DOTALL)
+
+
+def colorize(text):
+    """Wrap the contents of `«…»` markers in an ANSI color for terminal output."""
+    return RE_MARK.sub(f"«{COLOR_MATCH}\\1{COLOR_RESET}»", text)
 
 
 def clip(text, length):
@@ -143,19 +158,12 @@ def fmt_search(data, args, out):
         line = f"[{i}] {head}"
         if uid and uid not in head:
             line += f"  ({uid})"
-        extra = []
-        if r.get("nikaya"):
-            extra.append(r["nikaya"])
-        if r.get("author"):
-            extra.append(r["author"])
-        if r.get("lang"):
-            extra.append(r["lang"])
-        if extra:
-            line += "  [" + "/".join(extra) + "]"
         print(line, file=out)
         if not args.no_snippet and r.get("snippet"):
             snip = strip_html(r["snippet"], mark_matches=not args.no_marks)
             snip = clip(snip, args.snippet_len)
+            if args.color:
+                snip = colorize(snip)
             if snip:
                 print(f"    {snip}", file=out)
 
@@ -245,12 +253,19 @@ def main(argv=None):
                     help="omit snippet text (headers/refs only).")
     ap.add_argument("--no-marks", action="store_true",
                     help="do not wrap matched terms in «…».")
+    ap.add_argument("--no-color", action="store_true",
+                    help="disable ANSI color highlighting of matched terms "
+                         "(color is on by default when stdout is a terminal).")
     ap.add_argument("--raw", action="store_true",
                     help="pretty-print the parsed JSON unchanged.")
     args = ap.parse_args(argv)
 
-    raw = sys.stdin.read()
     out = sys.stdout
+    # Color the matched terms by default on a terminal; off when piped/redirected
+    # or when --no-color / --no-marks is given (no markers means nothing to color).
+    args.color = not args.no_color and not args.no_marks and out.isatty()
+
+    raw = sys.stdin.read()
 
     if not raw.strip():
         print("# (empty response — is the Simsapa app running?)", file=sys.stderr)
@@ -260,7 +275,10 @@ def main(argv=None):
         data = json.loads(raw)
     except json.JSONDecodeError:
         # Not JSON: assume rendered HTML (full sutta / word page).
-        print(strip_html(raw, mark_matches=not args.no_marks), file=out)
+        text = strip_html(raw, mark_matches=not args.no_marks)
+        if args.color:
+            text = colorize(text)
+        print(text, file=out)
         return 0
 
     if args.raw:

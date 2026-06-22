@@ -2,6 +2,25 @@
 
 The app runs a local HTTP server (Rocket, `bridges/src/api.rs`, bound to
 `127.0.0.1:<api_port>`) used by the browser extension and other local clients.
+The default port is 4848.
+
+```sh
+curl -s -X POST "localhost:4848/suttas_fulltext_search" \
+  -H 'Content-Type: application/json' \
+  -d '{"query_text":"vedanā aniccā","suttas_lang":"pli","page_num":0,"page_len":20}' | python3 scripts/simsapa_fmt.py
+```
+
+    # 1685 hit(s); showing 20
+    
+    [1] SN 18.5 — Vedanāsutta  (sn18.5/pli/ms)
+        «aniccā» bhante sotasamphassajā «vedanā» pe ghānasamphassajā «vedanā» jivhāsamphassajā «vedanā» kāyasamphassajā «vedanā» manosamphassajā «vedanā» niccā vā «aniccā» va ti «aniccā» bhante evaṁ
+    
+    [2] SN 18.5 — 5. Vedanāsuttaṁ  (sn18.5/pli/cst)
+        sotasamphassajā «vedanā» pe ghānasamphassajā «vedanā» jivhāsamphassajā «vedanā» kāyasamphassajā «vedanā» manosamphassajā «vedanā» niccā vā «aniccā» va ti «aniccā» bhante pe evaṁ passaṁ rāhula
+    
+    [3] SN 22.90 — 8. Channasuttaṁ  (sn22.90/pli/cst)
+        rūpaṁ kho āvuso channa «aniccaṁ» «vedanā aniccā» saññā «aniccā» saṅkhārā «aniccā» viññāṇaṁ «aniccaṁ» rūpaṁ anattā «vedanā» saññā saṅkhārā viññāṇaṁ anattā sabbe
+    ...
 
 This document covers the **whole route surface**. The four **search** endpoints
 and the **sutta/dictionary retrieval** routes are documented in detail (request /
@@ -79,8 +98,37 @@ rendered sutta/word HTML (tags stripped to plain text). Typical pipeline:
 ```sh
 curl -s -X POST "localhost:$PORT/suttas_fulltext_search" \
   -H 'Content-Type: application/json' \
-  -d '{"query_text":"vedanā aniccā","suttas_lang":"pli","page_num":0,"page_len":20}' | python3 scripts/simsapa_fmt.py
+  -d '{"query_text":"vedanā aniccā","suttas_lang":"pli","page_num":0,"page_len":20}' | python3 scripts/simsapa_fmt.py --no-color
 ```
+
+Matched terms are wrapped in `«…»` markers and, when stdout is a terminal,
+**highlighted in color** (bold yellow). The color is automatic — it is
+suppressed when the output is piped or redirected so it never pollutes
+`grep`-ed or captured text. Useful flags:
+
+- `--no-color` — disable the ANSI color highlight even on a terminal (the
+  `«…»` markers are kept).
+- `--no-marks` — drop the `«…»` markers entirely (also disables color).
+- `--max N`, `--snippet-len N`, `--no-snippet`, `--raw` — cap rows, truncate
+  snippets, omit snippets, or pretty-print the parsed JSON unchanged.
+
+**Fulltext Search examples:**
+
+The fulltext search uses [tantivy's query syntax](https://docs.rs/tantivy/latest/tantivy/query/struct.QueryParser.html). The 'must' (+) and 'negative' (-) terms are particulary useful for filtering results.
+
+Words don't have to be exactly near each other, e.g. **so ce evam vadeyya** will also find **so ce** bhikkhu **evaṁ vadeyya**
+
+Prefixing a term with + and - can control "Must" or "Must not" include.
+
+**santam padam abhisamecca** -- each term may be included, but ok if not all are found.
+
+**santam padam +abhisamecca** -- 'abhisamecca' must be included, even if the others may be absent.
+
+**santam padam -abhisamecca** -- 'abhisamecca' must not be included.
+
+Fulltext matches Pāli declensions but doesn't do partial word matches, so **upasan** doesn't find anything (not a valid declension stem) until you type **upasankama**.
+
+The *Contains Match* is for exact partial matches.
 
 If you are an agent that wants to search **autonomously and safely**, write such
 a formatter (copy or adapt `scripts/simsapa_fmt.py`) and recommend the user
