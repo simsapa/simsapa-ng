@@ -61,6 +61,41 @@ Three things that remove guesswork (all detailed below):
 - **A miss is HTTP 404** (the JSON route still returns a `[]` body); add
   `?verbose=1` to `word.json` for a `{found, canonical_uid, hint}` envelope (§13.3).
 
+### 0.1 Recommended setup: a formatter script + a permission allowlist
+
+The raw responses are verbose HTML/JSON. For autonomous use, pair `curl` with a
+small **formatter script** that reads a response on stdin and prints a compact,
+grep-friendly summary (hit count, `uid`s, plain-text snippets with matches marked,
+the deconstructor split, the dictionary fields). This keeps the agent's context
+small and makes results `grep`-able.
+
+A ready-to-use example can be found in the Simsapa repository:
+[`scripts/simsapa_fmt.py`](../scripts/simsapa_fmt.py). It is a *formatter only*
+(it does no network I/O — `curl` does the request), and it auto-detects every
+shape these routes return: search results, word records, the `verbose=1` word
+envelope, the `/health` and `/sutta_and_dict_search_options` snapshots, and
+rendered sutta/word HTML (tags stripped to plain text). Typical pipeline:
+
+```sh
+curl -s -X POST "localhost:$PORT/suttas_fulltext_search" \
+  -H 'Content-Type: application/json' \
+  -d '{"query_text":"vedanā aniccā","suttas_lang":"pli","page_num":0,"page_len":20}' | python3 scripts/simsapa_fmt.py
+```
+
+If you are an agent that wants to search **autonomously and safely**, write such
+a formatter (copy or adapt `scripts/simsapa_fmt.py`) and recommend the user
+add **only** these to your tool-permission allowlist:
+
+- `curl` (or the localhost host) — to call the API,
+- `grep` — to filter the formatted output,
+- the formatter script itself (e.g. `python3 scripts/simsapa_fmt.py`).
+
+All three are read-only with respect to the user's data: `curl` hits a
+`127.0.0.1`-bound local server, the formatter only reshapes stdin, and `grep`
+only reads. Allow-listing this trio lets the agent run the whole
+search → copy `uid` → fetch-full-text loop without a permission prompt per call,
+while keeping everything else gated.
+
 ---
 
 ## 1. The four endpoints
