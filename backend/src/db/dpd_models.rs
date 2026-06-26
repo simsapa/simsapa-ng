@@ -5,7 +5,7 @@ use lazy_static::lazy_static;
 use regex::Regex;
 
 use crate::db::dpd_schema::*;
-use crate::logger::{warn, error};
+use crate::logger::{debug, warn, error};
 
 #[derive(Debug, Clone)]
 pub enum UDpdWord {
@@ -152,7 +152,11 @@ pub struct Lookup {
 impl Lookup {
     pub fn headwords_unpack(&self) -> Vec<i32> {
         if self.headwords.is_empty() {
-            warn(&format!("headwords empty for lookup_key: {}", self.lookup_key));
+            // A deconstructor-only lookup row (e.g. a sandhi-compound such as
+            // "atthaññe") legitimately has no headwords of its own — the
+            // components are reached via `.deconstructor`. This is expected, not
+            // a problem, so log at debug to avoid noise.
+            debug(&format!("headwords empty for lookup_key: {}", self.lookup_key));
             return Vec::new();
         }
         let res: Vec<i32> = match serde_json::from_str(&self.headwords) {

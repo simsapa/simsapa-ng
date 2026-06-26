@@ -2172,6 +2172,33 @@ pub fn is_common_word(stem: &str, common_words: &[String]) -> bool {
     common_words.iter().any(|w| clean_stem(w) == cleaned_stem)
 }
 
+/// Build the gloss deduplication key for a word from its full DPD lookup result
+/// set (the unique `clean_stem`s of every result, in result order, joined by
+/// `|`).
+///
+/// A sandhi-compound such as `atthaññe` deconstructs to `atthi` + `aññe`, so its
+/// lookup returns the component lemmas (`atthi …`, `añña …`). Keying dedup on
+/// only `results[0]` made the compound collide with the standalone first
+/// component (`atthi`) — once `atthi` had been glossed earlier in the text,
+/// `atthaññe` was silently dropped as a "duplicate". Keying on the set of all
+/// component lemmas keeps a compound distinct from its parts while still
+/// deduplicating repeat occurrences of the same word (an identical surface form
+/// yields an identical, deterministic result set → identical key).
+///
+/// Order is preserved (no sort) so the key matches byte-for-byte whether it is
+/// computed here in Rust or in the QML mirror (`GlossTab.qml:gloss_dedup_key`),
+/// avoiding UTF-16 vs. UTF-8 sort-order divergence on Pāli diacritics.
+pub fn gloss_dedup_key(results: &[crate::db::dpd::LookupResult]) -> String {
+    let mut stems: Vec<String> = Vec::new();
+    for r in results {
+        let s = clean_stem(&r.word);
+        if !s.is_empty() && !stems.contains(&s) {
+            stems.push(s);
+        }
+    }
+    stems.join("|")
+}
+
 /// Clean word for Pāli text processing, including accented letters
 pub fn clean_word_pali(word: &str) -> String {
     lazy_static! {
@@ -2211,9 +2238,13 @@ pub fn process_word_for_glossing(
         })));
     }
 
-    // Get the stem from the first result
+    // Get the stem from the first result (used for display and common-word checks)
     let stem = results[0].word.clone();
-    let stem_clean = clean_stem(&stem);
+
+    // Dedup key spans every component lemma so a sandhi-compound (e.g.
+    // atthaññe -> atthi + aññe) is not dropped as a duplicate of its first
+    // component (atthi). See gloss_dedup_key().
+    let dedup_key = gloss_dedup_key(&results);
 
     // Skip common words if option is enabled
     if options.skip_common && is_common_word(&stem, &options.common_words) {
@@ -2221,19 +2252,19 @@ pub fn process_word_for_glossing(
     }
 
     // Skip if already shown in this paragraph
-    if paragraph_shown_stems.contains_key(&stem_clean) {
+    if paragraph_shown_stems.contains_key(&dedup_key) {
         return Ok(Some(WordProcessingResult::Skipped));
     }
 
     // Skip if global deduplication is on and already shown
-    if check_global && global_stems.contains_key(&stem_clean) {
+    if check_global && global_stems.contains_key(&dedup_key) {
         return Ok(Some(WordProcessingResult::Skipped));
     }
 
     // Mark as shown
-    paragraph_shown_stems.insert(stem_clean.clone(), true);
+    paragraph_shown_stems.insert(dedup_key.clone(), true);
     if check_global {
-        global_stems.insert(stem_clean, true);
+        global_stems.insert(dedup_key, true);
     }
 
     // Create the processed word result
@@ -2281,8 +2312,8 @@ pub fn update_global_stems_deduplication(
 ) {
     for result in processing_results {
         if let Some(WordProcessingResult::Recognized(processed_word)) = result {
-            let stem_clean = clean_stem(&processed_word.stem);
-            global_stems.insert(stem_clean, true);
+            let dedup_key = gloss_dedup_key(&processed_word.results);
+            global_stems.insert(dedup_key, true);
         }
     }
 }

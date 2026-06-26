@@ -598,6 +598,26 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
         return root.common_words.includes(clean_stem(stem));
     }
 
+    // Build the dedup key for a word from its full lookup result set (unique
+    // clean_stems of every result, in result order, joined by '|').
+    //
+    // A sandhi-compound such as 'atthaññe' deconstructs to 'atthi' + 'aññe', so
+    // keying dedup on only results[0] made the compound collide with the
+    // standalone first component ('atthi') and get dropped once 'atthi' had been
+    // glossed earlier. Keying on the whole component set keeps a compound
+    // distinct from its parts while still deduplicating repeats of the same word.
+    // Must match the Rust mirror (helpers.rs:gloss_dedup_key) byte-for-byte, so
+    // do NOT sort (avoids JS UTF-16 vs Rust UTF-8 order divergence on diacritics).
+    function gloss_dedup_key(results): string {
+        if (!results || results.length === 0) return "";
+        var stems = [];
+        for (var i = 0; i < results.length; i++) {
+            var s = root.clean_stem(results[i].word);
+            if (s && stems.indexOf(s) === -1) stems.push(s);
+        }
+        return stems.join("|");
+    }
+
     function create_word_model_item(word: string, lookup_results, sentence: string): var {
         return {
             original_word: clean_word(word),
@@ -623,9 +643,13 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
             return { is_unrecognized: true, word: word_info.word };
         }
 
-        // Get the stem from the first result
+        // Get the stem from the first result (used for display and common-word checks)
         var stem = results[0].word;
-        var stem_clean = root.clean_stem(stem);
+
+        // Dedup key spans every component lemma so a sandhi-compound
+        // (e.g. atthaññe -> atthi + aññe) is not dropped as a duplicate of its
+        // first component (atthi). See gloss_dedup_key().
+        var dedup_key = root.gloss_dedup_key(results);
 
         // Skip common words
         if (root.skip_common && root.is_common_word(stem)) {
@@ -633,19 +657,19 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
         }
 
         // Skip if already shown in this paragraph
-        if (paragraph_shown_stems[stem_clean]) {
+        if (paragraph_shown_stems[dedup_key]) {
             return null;
         }
 
         // Skip if global deduplication is on and already shown
-        if (check_global && global_stems[stem_clean]) {
+        if (check_global && global_stems[dedup_key]) {
             return null;
         }
 
         // Mark as shown
-        paragraph_shown_stems[stem_clean] = true;
+        paragraph_shown_stems[dedup_key] = true;
         if (check_global) {
-            global_stems[stem_clean] = true;
+            global_stems[dedup_key] = true;
         }
 
         return create_word_model_item(word_info.word, results, word_info.sentence);
@@ -662,7 +686,11 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
                     var words_data = JSON.parse(prev_para.words_data_json);
                     for (var w = 0; w < words_data.length; w++) {
                         var word_item = words_data[w];
-                        previous_stems[root.clean_stem(word_item.stem)] = true;
+                        // Use the full-result-set dedup key (matches
+                        // process_word_for_glossing / Rust gloss_dedup_key) so a
+                        // compound is deduplicated against itself across
+                        // paragraphs, not against its first component.
+                        previous_stems[root.gloss_dedup_key(word_item.results)] = true;
                     }
                 } catch (e) {
                     logger.error("Failed to parse words_data_json:", e);
