@@ -972,6 +972,16 @@ pub fn preprocess_text_for_word_extraction(text: &str) -> String {
     let text = text.replace("\n", " ").replace("\t", " ");
     let text = normalize_plain_text(&text);
 
+    // Remove inter-word hyphens *before* the nonword->space pass below, rather
+    // than letting them collapse into spaces. Contemporary texts hyphenate
+    // compounds for readability (e.g. `sambodhim-uttamaṁ`), but splitting on the
+    // hyphen breaks the compound at a point the deconstructor cannot resolve
+    // (`sambodhim` yields nothing). Joining instead gives the unbroken compound
+    // (`sambodhimuttamaṁ`), which the DPD deconstructor splits correctly into
+    // its components (sambodhi + uttama). This matches the behaviour when the
+    // input is already written without a hyphen.
+    let text = remove_inter_word_hyphens(&text);
+
     lazy_static! {
         static ref re_nonword: Regex = Regex::new(r"[^\w]+").unwrap();
         static ref re_digits: Regex = Regex::new(r"\d+").unwrap();
