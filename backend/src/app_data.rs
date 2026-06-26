@@ -1033,50 +1033,62 @@ impl AppData {
         // with "/dpd", producing "gacchati 1/dpd". Fall back to a sanitized uid
         // so those reconstructions still resolve to the dict_words row.
 
-        // b) DPD structured rows (only forms ending in "/dpd").
+        // b) DPD structured rows (only forms ending in "/dpd"), gated by the
+        //    shape of the key so we only run the query that can actually match.
+        //    Headword uids are always numeric ("34626/dpd") and root keys always
+        //    start with "√" ("√kar/dpd"); the common sanitized dict_words form
+        //    ("atthi-1.1/dpd") is neither, so it skips both and falls straight
+        //    through to the dict_words lookup in (c) — avoiding two guaranteed
+        //    "Record not found" misses on the hot path.
         if input.ends_with("/dpd") {
             // Headword by uid (numeric "<id>/dpd"). Correlate to its dict_words
-            // HTML row via lemma_1 sanitize.
-            if let Some(json_str) = self.get_dpd_headword_by_uid(input) {
-                if let Ok(value) = serde_json::from_str::<serde_json::Value>(&json_str) {
-                    let dict_word = value
-                        .get("lemma_1")
-                        .and_then(|v| v.as_str())
-                        .and_then(|lemma| {
-                            let canonical = format!("{}/dpd", word_uid_sanitize(lemma).to_lowercase());
-                            self.dbm.dictionaries.get_word(&canonical)
-                        })
-                        .or_else(|| self.dbm.dictionaries.get_word(input));
-                    return Some(ResolvedWord {
-                        canonical_uid: input.to_string(),
-                        kind: ResolvedWordKind::DpdHeadword,
-                        json_value: value,
-                        dict_word,
-                    });
+            // HTML row via lemma_1 sanitize. A leading digit is enough to
+            // distinguish it: headword uids are always numeric, while the
+            // sanitized dict_words and root forms never start with a digit.
+            if input.as_bytes().first().is_some_and(u8::is_ascii_digit) {
+                if let Some(json_str) = self.get_dpd_headword_by_uid(input) {
+                    if let Ok(value) = serde_json::from_str::<serde_json::Value>(&json_str) {
+                        let dict_word = value
+                            .get("lemma_1")
+                            .and_then(|v| v.as_str())
+                            .and_then(|lemma| {
+                                let canonical = format!("{}/dpd", word_uid_sanitize(lemma).to_lowercase());
+                                self.dbm.dictionaries.get_word(&canonical)
+                            })
+                            .or_else(|| self.dbm.dictionaries.get_word(input));
+                        return Some(ResolvedWord {
+                            canonical_uid: input.to_string(),
+                            kind: ResolvedWordKind::DpdHeadword,
+                            json_value: value,
+                            dict_word,
+                        });
+                    }
                 }
             }
 
             // Root by root key ("√kar/dpd" -> root key "√kar").
             let root_key = input.trim_end_matches("/dpd");
-            if let Some(json_str) = self.get_dpd_root_by_root_key(root_key) {
-                if let Ok(value) = serde_json::from_str::<serde_json::Value>(&json_str) {
-                    // Undisambiguated roots have a dict_words row at the same uid;
-                    // disambiguated ones ("√path 1") do not, so this is best-effort
-                    // (matches the pre-existing HTML behaviour).
-                    let dict_word = self.dbm.dictionaries.get_word(input).or_else(|| {
-                        let sanitized = word_uid_sanitize(input).to_lowercase();
-                        if sanitized != input {
-                            self.dbm.dictionaries.get_word(&sanitized)
-                        } else {
-                            None
-                        }
-                    });
-                    return Some(ResolvedWord {
-                        canonical_uid: input.to_string(),
-                        kind: ResolvedWordKind::DpdRoot,
-                        json_value: value,
-                        dict_word,
-                    });
+            if root_key.starts_with('√') {
+                if let Some(json_str) = self.get_dpd_root_by_root_key(root_key) {
+                    if let Ok(value) = serde_json::from_str::<serde_json::Value>(&json_str) {
+                        // Undisambiguated roots have a dict_words row at the same uid;
+                        // disambiguated ones ("√path 1") do not, so this is best-effort
+                        // (matches the pre-existing HTML behaviour).
+                        let dict_word = self.dbm.dictionaries.get_word(input).or_else(|| {
+                            let sanitized = word_uid_sanitize(input).to_lowercase();
+                            if sanitized != input {
+                                self.dbm.dictionaries.get_word(&sanitized)
+                            } else {
+                                None
+                            }
+                        });
+                        return Some(ResolvedWord {
+                            canonical_uid: input.to_string(),
+                            kind: ResolvedWordKind::DpdRoot,
+                            json_value: value,
+                            dict_word,
+                        });
+                    }
                 }
             }
         }
@@ -1143,6 +1155,14 @@ impl AppData {
                     }
                 }
             }
+            // NotFound is expected: resolve_word_uid probes this for every
+            // "/dpd" uid, including sanitized dict_words forms ("atthi-1.1/dpd")
+            // and root keys ("√kar/dpd") that never have a headword row. Log it
+            // at warn level; only genuine query errors are logged as errors.
+            Err(diesel::result::Error::NotFound) => {
+                warn(&format!("No DPD headword for uid {}", uid_str));
+                None
+            }
             Err(e) => {
                 error(&format!("Failed to query DPD headword for uid {}: {}", uid_str, e));
                 None
@@ -1175,6 +1195,14 @@ impl AppData {
                         None
                     }
                 }
+            }
+            // NotFound is expected: resolve_word_uid probes this for every
+            // "/dpd" uid (sanitized headword forms like "atthi-1.1/dpd" are not
+            // root keys). Log it at warn level; only genuine query errors are
+            // logged as errors.
+            Err(diesel::result::Error::NotFound) => {
+                warn(&format!("No DPD root for root_key {}", root_key_str));
+                None
             }
             Err(e) => {
                 error(&format!("Failed to query DPD root for root_key {}: {}", root_key_str, e));
