@@ -469,6 +469,10 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
         }
 
         let paragraph = paragraph_model.get(paragraph_index);
+        if (!paragraph) {
+            logger.error(`handle_ai_translate_request: no paragraph at index ${paragraph_index}`);
+            return;
+        }
 
         // Load system prompt and translation template
         let system_prompt = SuttaBridge.get_system_prompt("Gloss Tab: System Prompt");
