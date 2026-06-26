@@ -269,7 +269,7 @@ elseif (APPLE)
     qt_add_executable(simsapadhammareader MACOSX_BUNDLE ${app_files} ${app_icon_macos})
 
     set_target_properties(simsapadhammareader PROPERTIES
-        MACOSX_BUNDLE_GUI_IDENTIFIER "com.profoundlabs.simsapa"
+        MACOSX_BUNDLE_GUI_IDENTIFIER "io.github.simsapa.app"
     )
 
     # Patch NSMicrophoneUsageDescription into the CMake-generated Info.plist

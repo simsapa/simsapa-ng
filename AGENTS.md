@@ -146,6 +146,20 @@ Notable feature docs:
   `GET …?channel=…&no_stats=true`, validates before writing, rebuild needed to
   re-embed). The channel comes from `get_release_channel()`
   (`RELEASE_CHANNEL` env → `AppSettings` → default `simsapa-ng`).
+- [App packaging and identifiers](./docs/app-packaging-and-identifiers.md) — the
+  per-platform packaging identifiers and the crucial distinction between the
+  **application identifier** (`io.github.simsapa.app` — the store/OS package id,
+  set in `android/AndroidManifest.xml` `package=`, macOS
+  `MACOSX_BUNDLE_GUI_IDENTIFIER` in `CMakeLists.txt` + `BUNDLE_ID` in
+  `build-macos.sh`; Windows `AppId` is a GUID, Linux has none) and the **QML
+  module URI** (`com.profoundlabs.simsapa` — an internal Qt namespace used by
+  `import com.profoundlabs.simsapa`, the `assets/qml/com/profoundlabs/simsapa/`
+  stubs, `bridges/build.rs` / `cxx_qt_import_qml_module` URI, and the
+  `:/qt/qml/com/profoundlabs/simsapa/…` resource paths). **The two are unrelated
+  and must NOT be conflated** — the Android applicationId was changed for Google
+  Play without touching the QML URI (a ~70-site, no-benefit refactor). Covers why
+  the Android FileProvider authority and `/data/user/0/<pkg>/` data dir derive
+  automatically from the package, and the change checklist.
 
 ## Specific coding procedures
 

@@ -8,7 +8,7 @@ set -e
 # Default values - can be overridden by command line arguments
 APP_NAME=""
 APP_VERSION=""
-BUNDLE_ID="com.profoundlabs.simsapa"
+BUNDLE_ID="io.github.simsapa.app"
 BUILD_DIR="./build/simsapadhammareader"
 ARCH="$(uname -m)"  # arm64 or x86_64
 
@@ -37,7 +37,7 @@ show_usage() {
     echo "Options:"
     echo "  --app-name NAME      Set application name (default: read from .desktop file)"
     echo "  --app-version VER    Set application version (default: read from bridges/Cargo.toml)"
-    echo "  --bundle-id ID       Set bundle identifier (default: com.profoundlabs.simsapa)"
+    echo "  --bundle-id ID       Set bundle identifier (default: io.github.simsapa.app)"
     echo "  --clean              Clean build artifacts before building"
     echo "  --skip-dmg           Skip DMG creation, only create .app bundle"
     echo "  --help, -h           Show this help message"

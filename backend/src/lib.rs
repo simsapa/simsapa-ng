@@ -629,9 +629,9 @@ pub fn check_file_exists_print_err<P: AsRef<Path>>(path: P) -> Result<bool, Box<
 
 pub fn get_create_simsapa_internal_app_root() -> Result<PathBuf, Box<dyn Error>> {
     // AppDataType::UserData
-    // - Android: /data/user/0/com.profoundlabs.simsapa/files/.local/share/simsapa-ng
+    // - Android: /data/user/0/io.github.simsapa.app/files/.local/share/simsapa-ng
     // AppDataType::UserConfig
-    // - Android: /data/user/0/com.profoundlabs.simsapa/files/.config/simsapa-ng
+    // - Android: /data/user/0/io.github.simsapa.app/files/.config/simsapa-ng
     let mut p = get_app_root(AppDataType::UserData, &APP_INFO)?;
 
     // On Android and iOS, strip .local/share/simsapa-ng from the path, so that

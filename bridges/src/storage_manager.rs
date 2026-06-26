@@ -44,7 +44,7 @@ impl qobject::StorageManager {
         // by get_create_simsapa_internal_app_root()
         //
         // On Android the path does not include '.local/share/simsapa-ng':
-        // /data/user/0/com.profoundlabs.simsapa/files/storage_path.txt
+        // /data/user/0/io.github.simsapa.app/files/storage_path.txt
         //
         // Values returned from accepting the StorageDialog:
         //
@@ -52,8 +52,8 @@ impl qobject::StorageManager {
         // /home/gambhiro/.local/share/simsapa-ng, is_internal: true
         //
         // Android:
-        // /data/user/0/com.profoundlabs.simsapa/files, is_internal: true
-        // /storage/emulated/0/Android/data/com.profoundlabs.simsapa/files, is_internal: false
+        // /data/user/0/io.github.simsapa.app/files, is_internal: true
+        // /storage/emulated/0/Android/data/io.github.simsapa.app/files, is_internal: false
         info(&format!("Selected path: {}, is_internal: {}", selected_path, is_internal));
 
         let internal_app_root = if let Ok(p) = get_create_simsapa_internal_app_root() {
