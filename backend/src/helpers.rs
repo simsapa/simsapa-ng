@@ -2065,8 +2065,29 @@ pub fn bilara_line_by_line_html(
 ) -> Result<String> {
     let mut content_json: IndexMap<String, String> = IndexMap::new();
 
-    // Iterate through the translated map (preserves insertion order)
-    for (i, translated_segment) in translated_content_json.iter() {
+    // Iterate through the template map, which holds the full document structure
+    // in order. The template is a superset of both the translated and Pali
+    // segment keys, so iterating it (rather than the translated map alone)
+    // ensures Pali-only segments — those that have no corresponding translation
+    // segment, e.g. "Idaṁ vuccati, bhikkhave, vaggakammaṁ." in
+    // pli-tv-kd9/en/brahmali — are not dropped from the line-by-line view.
+    //
+    // Fall back to the union of translated + Pali keys for the (unexpected) case
+    // of a missing/empty template, so no segment is ever silently lost.
+    let ordered_keys: Vec<String> = if tmpl_json.is_empty() {
+        let mut keys: Vec<String> = translated_content_json.keys().cloned().collect();
+        for k in pali_content_json.keys() {
+            if !translated_content_json.contains_key(k) {
+                keys.push(k.clone());
+            }
+        }
+        keys
+    } else {
+        tmpl_json.keys().cloned().collect()
+    };
+
+    for i in &ordered_keys {
+        let translated_segment = translated_content_json.get(i).cloned().unwrap_or_default();
         let pali_segment = pali_content_json.get(i).cloned().unwrap_or_default(); // Get Pali or empty string
 
         // Generate reference anchor for this segment only if show_references is true

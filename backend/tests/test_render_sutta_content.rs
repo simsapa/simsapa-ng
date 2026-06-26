@@ -234,6 +234,7 @@ fn generate_all_rendered_html() {
         "dhp290-305/en/sujato",
         "snp1.8/en/sujato",
         "pli-tv-bu-vb-pj4/en/brahmali",
+        "pli-tv-kd9/en/brahmali",
     ];
 
     println!("Generating rendered HTML files from new database...");
@@ -380,6 +381,38 @@ fn test_render_pli_tv_bu_vb_pj4_en_brahmali() {
 
     // Check that comments are present in the rendered HTML
     assert_contains_comments(&html, sutta_uid);
+
+    let expected = load_expected_html(sutta_uid);
+    assert_eq!(html, expected, "Rendered HTML mismatch for {}", sutta_uid);
+}
+
+/// Regression test for line-by-line rendering dropping Pali-only segments.
+///
+/// In pli-tv-kd9/en/brahmali the Pali sutta has segments that have no
+/// corresponding English translation segment (e.g. segment 3.5.8
+/// "Idaṁ vuccati, bhikkhave, vaggakammaṁ."). The old line-by-line renderer
+/// iterated only the translated segment keys, so these Pali-only lines were
+/// silently dropped from the rendered page. The renderer now iterates the
+/// document template (a superset of both languages' keys), so the line is kept.
+#[test]
+#[serial]
+fn test_render_pli_tv_kd9_en_brahmali() {
+    h::app_data_setup();
+    let sutta_uid = "pli-tv-kd9/en/brahmali";
+    let html = render_and_extract_article(sutta_uid);
+
+    // The previously-dropped Pali-only segment must be present.
+    assert!(
+        html.contains("Idaṁ vuccati, bhikkhave, vaggakammaṁ."),
+        "Pali-only segment 'Idaṁ vuccati, bhikkhave, vaggakammaṁ.' is missing \
+         from the rendered line-by-line HTML for {}",
+        sutta_uid,
+    );
+    assert!(
+        html.contains(r#"id='pli-tv-kd9:3.5.8'"#),
+        "Segment pli-tv-kd9:3.5.8 is missing from the rendered HTML for {}",
+        sutta_uid,
+    );
 
     let expected = load_expected_html(sutta_uid);
     assert_eq!(html, expected, "Rendered HTML mismatch for {}", sutta_uid);
