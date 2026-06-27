@@ -224,6 +224,9 @@ Item {
     // change events only mark the session dirty; the autosave Timer flushes.
     property bool session_needs_saving: false
     property bool save_in_flight: false
+    // A save was requested while one was already in flight; run one more after it
+    // resolves (prevents duplicate INSERTs and keeps the latest state).
+    property bool save_again_pending: false
     // Set true by explicit Save / New Session so the History list refreshes when
     // the next save completes; the autosave path leaves it false (PRD req 11).
     property bool refresh_list_on_save: false
@@ -263,14 +266,26 @@ Item {
 
         function onHistorySaved(item_type: string, session_id: string) {
             if (item_type !== "gloss") return;
+            root.save_in_flight = false;
+            // Empty id = save failed: keep the session dirty so the next tick
+            // retries, and don't clobber current_session_id.
+            if (session_id.length === 0) {
+                logger.error("Gloss session save failed; will retry on next tick.");
+                return;
+            }
             root.current_session_id = session_id;
             root.session_needs_saving = false;
-            root.save_in_flight = false;
             // Refresh the list only for explicit Save / New Session writes, never
             // on the autosave path (PRD req 11).
             if (root.refresh_list_on_save) {
                 root.refresh_list_on_save = false;
                 root.load_history();
+            }
+            // A save was requested while this one was in flight; run it now that
+            // current_session_id is known (so it UPDATEs, not a duplicate INSERT).
+            if (root.save_again_pending) {
+                root.save_again_pending = false;
+                root.save_session();
             }
         }
 
@@ -670,6 +685,16 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
             }
             root.session_needs_saving = false;
             root.save_in_flight = false;
+            root.save_again_pending = false;
+            return;
+        }
+
+        // Single-writer: never start a second concurrent write. A double-click on
+        // Save (or a tick landing on an in-flight write) would otherwise INSERT a
+        // duplicate row for a not-yet-persisted new session. Coalesce into one
+        // follow-up save that runs when the current write resolves.
+        if (root.save_in_flight) {
+            root.save_again_pending = true;
             return;
         }
 
@@ -690,7 +715,11 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
     }
 
     // Flush any pending changes to the *current* session before switching away
-    // from it (PRD reqs 16, 17). Uses a blocking write so nothing is lost.
+    // from it (PRD reqs 16, 17). Uses a blocking write deliberately: an async
+    // flush's historySaved would arrive after the subsequent load_session and
+    // clobber current_session_id with the flushed session's new id. The data_json
+    // is serialized synchronously before any load, so the blocking write is safe
+    // and the UI pause is brief.
     function flush_if_needed() {
         if (root.session_needs_saving && !root.is_session_empty()) {
             root.save_session(true);
@@ -729,6 +758,11 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
     // selected text instead of overwriting the current gloss.
     function gloss_selected_text(text) {
         if (root.is_session_empty()) {
+            // An empty session may still carry a current_session_id (e.g. a loaded
+            // session whose text was manually cleared). Detach so the new gloss
+            // INSERTs a fresh row instead of overwriting that old session.
+            root.current_session_id = "";
+            root.selected_history_id = -1;
             root.start_gloss_with_text(text);
             return;
         }

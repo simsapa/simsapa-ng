@@ -2655,15 +2655,16 @@ impl qobject::SuttaBridge {
         let qt_thread = self.qt_thread();
         thread::spawn(move || {
             let resolved_id = save_history_session_impl(parsed, &session_id_str, &data_json_str);
-            if let Some(id_str) = resolved_id {
-                let item_type_q = QString::from(&item_type_str);
-                let id_q = QString::from(&id_str);
-                qt_thread
-                    .queue(move |mut qo| {
-                        qo.as_mut().history_saved(item_type_q, id_q);
-                    })
-                    .unwrap();
-            }
+            // Always emit completion so the tab can clear its in-flight guard.
+            // An empty resolved id signals failure (the tab keeps the session
+            // dirty for the next retry and does not clobber current_session_id).
+            let item_type_q = QString::from(&item_type_str);
+            let id_q = QString::from(&resolved_id.unwrap_or_default());
+            qt_thread
+                .queue(move |mut qo| {
+                    qo.as_mut().history_saved(item_type_q, id_q);
+                })
+                .unwrap();
         });
     }
 
