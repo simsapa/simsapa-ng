@@ -21,6 +21,7 @@ use simsapa_backend::logger::{info, warn, error, debug, get_log_level_str, set_l
 use simsapa_backend::topic_index;
 use simsapa_backend::update_checker;
 use simsapa_backend::types::SearchResult;
+use simsapa_backend::db::appdata_models::HistoryItemType;
 
 /// Cache for search result pages to avoid re-querying for previously fetched pages.
 struct ResultsPageCache {
@@ -561,6 +562,40 @@ fn qurl_to_local_path(url: &QUrl) -> String {
     path_str
 }
 
+/// Shared INSERT/UPDATE logic for a history session, used by both the async and
+/// the blocking (app-close) save paths. `session_id` is the QML-side string:
+/// empty means INSERT a new row, otherwise UPDATE the row with that parsed id.
+/// Returns the resolved id as a string (the new id on INSERT), or `None` on a
+/// parse/DB error.
+fn save_history_session_impl(item_type: HistoryItemType, session_id: &str, data_json: &str) -> Option<String> {
+    let app_data = get_app_data();
+    let session_id = session_id.trim();
+
+    if session_id.is_empty() {
+        match app_data.dbm.appdata.save_new_history(item_type, data_json) {
+            Ok(new_id) => Some(new_id.to_string()),
+            Err(e) => {
+                error(&format!("save_history_session_impl insert: {}", e));
+                None
+            }
+        }
+    } else {
+        match session_id.parse::<i32>() {
+            Ok(id) => match app_data.dbm.appdata.update_history(id, data_json) {
+                Ok(()) => Some(id.to_string()),
+                Err(e) => {
+                    error(&format!("save_history_session_impl update: {}", e));
+                    None
+                }
+            },
+            Err(e) => {
+                error(&format!("save_history_session_impl: invalid session_id {:?}: {}", session_id, e));
+                None
+            }
+        }
+    }
+}
+
 #[cxx_qt::bridge]
 pub mod qobject {
 
@@ -694,6 +729,20 @@ pub mod qobject {
         #[qsignal]
         #[cxx_name = "waveformDataReady"]
         fn waveform_data_ready(self: Pin<&mut SuttaBridge>, recording_uid: QString, waveform_json: QString);
+
+        // Gloss / Prompts history signals (item_type is "gloss" | "prompts").
+        // The QML tabs filter on item_type so a single SuttaBridge serves both.
+        #[qsignal]
+        #[cxx_name = "historyListReady"]
+        fn history_list_ready(self: Pin<&mut SuttaBridge>, item_type: QString, json: QString);
+
+        #[qsignal]
+        #[cxx_name = "historySaved"]
+        fn history_saved(self: Pin<&mut SuttaBridge>, item_type: QString, session_id: QString);
+
+        #[qsignal]
+        #[cxx_name = "historyChanged"]
+        fn history_changed(self: Pin<&mut SuttaBridge>, item_type: QString);
 
         #[qinvokable]
         fn emit_update_window_title(self: Pin<&mut SuttaBridge>, sutta_uid: QString, sutta_ref: QString, sutta_title: QString);
@@ -983,14 +1032,22 @@ pub mod qobject {
         #[qinvokable]
         fn save_common_words_json(self: &SuttaBridge, words_json: &QString);
 
+        // Gloss / Prompts history (shared, item_type-parameterised). All DB work
+        // runs off the UI thread except the blocking flush used on app close.
         #[qinvokable]
-        fn get_gloss_history_json(self: &SuttaBridge) -> QString;
+        fn get_history_json_background(self: Pin<&mut SuttaBridge>, item_type: &QString);
 
         #[qinvokable]
-        fn update_gloss_session(self: &SuttaBridge, session_uid: &QString, gloss_data_json: &QString);
+        fn save_history_session_background(self: Pin<&mut SuttaBridge>, item_type: &QString, session_id: &QString, data_json: &QString);
 
         #[qinvokable]
-        fn save_new_gloss_session(self: &SuttaBridge, gloss_data_json: &QString) -> QString;
+        fn save_history_session_blocking(self: &SuttaBridge, item_type: &QString, session_id: &QString, data_json: &QString) -> QString;
+
+        #[qinvokable]
+        fn delete_history_item(self: Pin<&mut SuttaBridge>, item_type: &QString, id: i32);
+
+        #[qinvokable]
+        fn clear_history(self: Pin<&mut SuttaBridge>, item_type: &QString);
 
         #[qinvokable]
         fn save_anki_csv(self: &SuttaBridge, csv_content: &QString) -> QString;
@@ -2512,15 +2569,164 @@ impl qobject::SuttaBridge {
         }
     }
 
-    pub fn get_gloss_history_json(&self) -> QString {
-        QString::from("[]")
+    // --- Gloss / Prompts history (shared, item_type-parameterised) ---
+    //
+    // The QML side passes `item_type` as a lowercase string ("gloss" |
+    // "prompts"); we parse it to a `HistoryItemType` at the boundary so the rest
+    // of the Rust path is type-safe. `data_json` is opaque text owned by the QML
+    // tab. See tasks/2026-06-27-131935-prd---gloss-prompts-history.md.
+
+    /// Builds the history list JSON: `[{id, modified, data}]` newest-first,
+    /// where `data` is the stored `data_json` string (the GlossTab/PromptsTab
+    /// `load_session` re-parses it). Emits `historyListReady(item_type, json)`.
+    pub fn get_history_json_background(self: Pin<&mut Self>, item_type: &QString) {
+        let item_type_str = item_type.to_string();
+        let parsed: HistoryItemType = match item_type_str.parse() {
+            Ok(t) => t,
+            Err(e) => {
+                error(&format!("get_history_json_background: {}", e));
+                return;
+            }
+        };
+
+        let qt_thread = self.qt_thread();
+        thread::spawn(move || {
+            let app_data = get_app_data();
+            let items = app_data.dbm.appdata.get_history_for_type(parsed);
+
+            let arr: Vec<serde_json::Value> = items
+                .into_iter()
+                .map(|it| {
+                    let modified = it
+                        .updated_at
+                        .map(|t| t.to_string())
+                        .unwrap_or_default();
+                    serde_json::json!({
+                        "id": it.id,
+                        "modified": modified,
+                        "data": it.data_json,
+                    })
+                })
+                .collect();
+
+            let json = serde_json::to_string(&arr).unwrap_or_else(|_| "[]".to_string());
+            let item_type_q = QString::from(&item_type_str);
+            let json_q = QString::from(&json);
+            qt_thread
+                .queue(move |mut qo| {
+                    qo.as_mut().history_list_ready(item_type_q, json_q);
+                })
+                .unwrap();
+        });
     }
 
-    pub fn update_gloss_session(&self, _session_uid: &QString, _gloss_data_json: &QString) {
+    /// INSERT (empty `session_id`) or UPDATE the current session off the UI
+    /// thread. Skips genuinely empty `data_json`. Emits
+    /// `historySaved(item_type, resolved_id)` with the resolved id as a string
+    /// so QML keeps `current_session_id` as a string end-to-end.
+    pub fn save_history_session_background(self: Pin<&mut Self>, item_type: &QString, session_id: &QString, data_json: &QString) {
+        let item_type_str = item_type.to_string();
+        let session_id_str = session_id.to_string();
+        let data_json_str = data_json.to_string();
+
+        let parsed: HistoryItemType = match item_type_str.parse() {
+            Ok(t) => t,
+            Err(e) => {
+                error(&format!("save_history_session_background: {}", e));
+                return;
+            }
+        };
+
+        // Skip genuinely empty sessions so history is not polluted with blanks.
+        if data_json_str.trim().is_empty() {
+            return;
+        }
+
+        let qt_thread = self.qt_thread();
+        thread::spawn(move || {
+            let resolved_id = save_history_session_impl(parsed, &session_id_str, &data_json_str);
+            if let Some(id_str) = resolved_id {
+                let item_type_q = QString::from(&item_type_str);
+                let id_q = QString::from(&id_str);
+                qt_thread
+                    .queue(move |mut qo| {
+                        qo.as_mut().history_saved(item_type_q, id_q);
+                    })
+                    .unwrap();
+            }
+        });
     }
 
-    pub fn save_new_gloss_session(&self, _gloss_data_json: &QString) -> QString {
-        QString::from("session-uid")
+    /// Synchronous INSERT/UPDATE for the app-close flush only (req 17): the
+    /// write must complete before the process exits, so this runs on the caller
+    /// thread and returns the resolved id directly (empty string on skip/error).
+    pub fn save_history_session_blocking(&self, item_type: &QString, session_id: &QString, data_json: &QString) -> QString {
+        let item_type_str = item_type.to_string();
+        let session_id_str = session_id.to_string();
+        let data_json_str = data_json.to_string();
+
+        let parsed: HistoryItemType = match item_type_str.parse() {
+            Ok(t) => t,
+            Err(e) => {
+                error(&format!("save_history_session_blocking: {}", e));
+                return QString::from("");
+            }
+        };
+
+        if data_json_str.trim().is_empty() {
+            return QString::from("");
+        }
+
+        match save_history_session_impl(parsed, &session_id_str, &data_json_str) {
+            Some(id_str) => QString::from(&id_str),
+            None => QString::from(""),
+        }
+    }
+
+    /// Deletes a single history row, then emits `historyChanged(item_type)` so
+    /// the tab reloads its list.
+    pub fn delete_history_item(self: Pin<&mut Self>, item_type: &QString, id: i32) {
+        let item_type_str = item_type.to_string();
+        let qt_thread = self.qt_thread();
+        thread::spawn(move || {
+            let app_data = get_app_data();
+            if let Err(e) = app_data.dbm.appdata.delete_history_item(id) {
+                error(&format!("delete_history_item: {}", e));
+            }
+            let item_type_q = QString::from(&item_type_str);
+            qt_thread
+                .queue(move |mut qo| {
+                    qo.as_mut().history_changed(item_type_q);
+                })
+                .unwrap();
+        });
+    }
+
+    /// Clears all history rows for an item_type, then emits
+    /// `historyChanged(item_type)`.
+    pub fn clear_history(self: Pin<&mut Self>, item_type: &QString) {
+        let item_type_str = item_type.to_string();
+        let parsed: HistoryItemType = match item_type_str.parse() {
+            Ok(t) => t,
+            Err(e) => {
+                error(&format!("clear_history: {}", e));
+                return;
+            }
+        };
+
+        let qt_thread = self.qt_thread();
+        thread::spawn(move || {
+            let app_data = get_app_data();
+            if let Err(e) = app_data.dbm.appdata.clear_history(parsed) {
+                error(&format!("clear_history: {}", e));
+            }
+            let item_type_q = QString::from(&item_type_str);
+            qt_thread
+                .queue(move |mut qo| {
+                    qo.as_mut().history_changed(item_type_q);
+                })
+                .unwrap();
+        });
     }
 
     pub fn save_anki_csv(&self, _csv_content: &QString) -> QString {

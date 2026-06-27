@@ -532,22 +532,9 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
     }
 
     function load_history() {
-        history_model.clear()
-        var history_json = SuttaBridge.get_gloss_history_json();
-        if (history_json) {
-            try {
-                var data = JSON.parse(history_json);
-                for (var i = 0; i < data.length; i++) {
-                    history_model.append({
-                        db_id: data[i].id,
-                        modified_time: data[i].modified,
-                        gloss_data: data[i].data
-                    });
-                }
-            } catch (e) {
-                logger.error("Failed to parse history:", e);
-            }
-        }
+        // Async: results arrive via the historyListReady signal (wired up in
+        // the full History UI integration). See the gloss/prompts history PRD.
+        SuttaBridge.get_history_json_background("gloss");
     }
 
     function save_session() {
@@ -575,13 +562,10 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
             });
         }
 
-        if (root.current_session_id) {
-            SuttaBridge.update_gloss_session(root.current_session_id, JSON.stringify(gloss_data));
-        } else {
-            root.current_session_id = SuttaBridge.save_new_gloss_session(JSON.stringify(gloss_data));
-        }
-
-        root.load_history();
+        // Async background save; the resolved session id arrives via the
+        // historySaved signal (wired up in the full session-lifecycle
+        // integration). See the gloss/prompts history PRD.
+        SuttaBridge.save_history_session_background("gloss", root.current_session_id, JSON.stringify(gloss_data));
     }
 
     // Clean stem by removing disambiguating numbers

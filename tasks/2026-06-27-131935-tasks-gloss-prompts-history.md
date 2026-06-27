@@ -118,7 +118,7 @@ precedent).
 - [x] 1.8 Apply the migration to the dev DB and confirm the backend compiles
       (`cd backend && cargo build`); add CRUD tests in task 7.0.
 
-### 2.0 Rust bridge: shared `item_type` history functions (PRD reqs 5, 10a, 17-backend)
+### 2.0 Rust bridge: shared `item_type` history functions (PRD reqs 5, 10a, 17-backend) ✅
 
 **Spec / API surface** (all `item_type`-parameterised; reuse for both tabs):
 - `get_history_json_background(item_type)` → emits `historyListReady(item_type,
@@ -135,18 +135,18 @@ precedent).
   the UI thread; emit `historyChanged(item_type)` so the tab reloads its list.
 **Depends on:** task 1.0 CRUD helpers; the `qt_thread`/`#[qsignal]` async pattern.
 
-- [ ] 2.1 In the `extern` block of `bridges/src/sutta_bridge.rs`, declare the new
+- [x] 2.1 In the `extern` block of `bridges/src/sutta_bridge.rs`, declare the new
       `#[qsignal]`s (`historyListReady`, `historySaved`, `historyChanged`, each
       with `item_type` + payload) with `#[cxx_name]` camelCase names, mirroring
       `:597`.
-- [ ] 2.2 Declare the new functions in the `extern` block (the four background
+- [x] 2.2 Declare the new functions in the `extern` block (the four background
       fns + the blocking flush), removing/repurposing the three gloss stubs
       (`get_gloss_history_json`, `save_new_gloss_session`, `update_gloss_session`).
-- [ ] 2.3 Implement `get_history_json_background` using `thread::spawn` +
+- [x] 2.3 Implement `get_history_json_background` using `thread::spawn` +
       `qt_thread.queue` → `emit_history_list_ready`, building the JSON array from
       `get_history_for_type` (id, `updated_at` as `modified`, `data_json` as
       `data`).
-- [ ] 2.4 Implement `save_history_session_background`: skip empty `data_json`
+- [x] 2.4 Implement `save_history_session_background`: skip empty `data_json`
       sessions (guard mirrors req 15, though the QML also guards); INSERT vs
       UPDATE by `session_id`; emit `historySaved(item_type, resolved_id)`.
       **ID-type contract:** `session_id` is a `QString` (`""` = INSERT, otherwise
@@ -154,20 +154,20 @@ precedent).
       so QML keeps `current_session_id` as a `string` end-to-end (GlossTab's
       `current_session_id` is `property string`, `:219`). Parse to `i32` only
       inside Rust.
-- [ ] 2.5 Implement `save_history_session_blocking(item_type, session_id,
+- [x] 2.5 Implement `save_history_session_blocking(item_type, session_id,
       data_json) -> QString` (synchronous INSERT/UPDATE, returns the resolved id
       as a `QString`) for the close path; same skip-empty + ID-type contract.
-- [ ] 2.6 Implement `delete_history_item` and `clear_history` as background ops
+- [x] 2.6 Implement `delete_history_item` and `clear_history` as background ops
       emitting `historyChanged(item_type)`.
-- [ ] 2.7 Update the GlossTab callers that referenced the old stub names
+- [x] 2.7 Update the GlossTab callers that referenced the old stub names
       (`get_gloss_history_json`/`save_new_gloss_session`/`update_gloss_session` at
       GlossTab `:536`/`:579`/`:581`) so the project still compiles after the
       rename — full rewiring happens in task 4.0, but keep the build green here.
-- [ ] 2.8 Add matching `qmllint` stubs for every new function and signal to
+- [x] 2.8 Add matching `qmllint` stubs for every new function and signal to
       `assets/qml/com/profoundlabs/simsapa/SuttaBridge.qml` (signals as
       functions/properties per existing convention); remove the obsolete
       `get_gloss_history_json` stub (`:425`).
-- [ ] 2.9 Confirm the project builds (`make build -B`).
+- [x] 2.9 Confirm the project builds (`make build -B`).
 
 ### 3.0 Shared QML: list-item component + helper (PRD reqs 21–23, 25, 26)
 
