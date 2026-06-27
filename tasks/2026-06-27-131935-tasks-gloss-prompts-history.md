@@ -261,29 +261,64 @@ Change points that mark dirty: appending a user message, receiving responses
 (`:100`, `:182`), editing a user/system message, regenerate/branch (`:920`).
 **Depends on:** tasks 2.0 and 3.0; reuse the shared helper + `HistoryListItem`.
 
-- [ ] 5.1 Add `current_session_id`, `session_needs_saving`, `selected_history_id`,
-      `ListModel { id: history_model }`, the 60 s autosave `Timer`, and a
-      `Connections` to `historySaved`/`historyChanged` filtered on
-      `item_type === "prompts"`.
-- [ ] 5.2 Implement `save_session()` (serialize `messages_model`, async/blocking
-      bridge save, skip empty, no list reload) and `load_session()` (rebuild
-      `messages_model`); add a `session_data_json()` helper. **Normalize in-flight
-      responses on serialize:** responses arrive asynchronously via
+**IMPORTANT — replicate the GlossTab session-lifecycle gotchas (PRD §10).** The
+GlossTab build hardened the shared lifecycle; PromptsTab must mirror **all** of
+it, not just the happy path. Concretely (see PRD §10 for the why):
+- State machine: `session_needs_saving`, `save_in_flight`, `save_again_pending`,
+  `refresh_list_on_save`, `current_session_id` (string, `""` = no row yet).
+- `save_session(blocking)` is **single-writer**: async path returns early setting
+  `save_again_pending = true` when `save_in_flight`; the `blocking === true`
+  branch is the synchronous close/flush variant (PRD §10.3, §10.4).
+- `onHistorySaved` (filtered `item_type === "prompts"`): reset `save_in_flight`;
+  **empty `session_id` = failure** → keep dirty, don't clobber id, return;
+  otherwise set id, clear dirty, refresh list iff `refresh_list_on_save`, then run
+  the coalesced `save_again_pending` save (PRD §10.2, §10.3).
+- Reset `current_session_id = ""` on **Clear**, and on **Delete** of the active
+  session (PRD §10.1 — backend INSERT-fallback already backs this up).
+- `load_session()` sets `session_needs_saving = false` **last** (after rebuilding
+  `messages_model`); guard any delegate change handlers so they don't mark dirty
+  during restore (PRD §10.5).
+- Use the **blocking** flush for New Session / Open (PRD §10.4).
+The cleanest path is to copy GlossTab's `save_session` / `save_session_now` /
+`flush_if_needed` / `onHistorySaved` shape verbatim and swap the serialize /
+restore bodies + `"gloss"` → `"prompts"`.
+
+- [ ] 5.1 Add `current_session_id`, `session_needs_saving`, `save_in_flight`,
+      `save_again_pending`, `refresh_list_on_save`, `selected_history_id`,
+      `ListModel { id: history_model }`, the 60 s autosave `Timer` (tick gated on
+      `session_needs_saving && !save_in_flight`), and a `Connections` to
+      `historySaved`/`historyChanged`/`historyListReady` filtered on
+      `item_type === "prompts"` (with the empty-id failure handling per PRD §10.2).
+- [ ] 5.2 Implement `save_session(blocking)` (single-writer guard + coalesce per
+      PRD §10.3; `blocking` close/flush variant per §10.4; `is_session_empty()`
+      skip; no list reload on autosave), `save_session_now()` (sets
+      `refresh_list_on_save`), `flush_if_needed()` (blocking), and `load_session()`
+      (rebuild `messages_model`, set `session_needs_saving = false` last per
+      §10.5); add a `session_data_json()` helper. **Normalize in-flight responses
+      on serialize:** responses arrive asynchronously via
       `onPromptResponseForMessages` (`:38`) and `responses_json` carries a per-
       response `status` (`pending`/`completed`/`error`); since in-flight state is
       not persisted, any non-terminal (`pending`) response must be dropped or
       marked interrupted at save time so a restored conversation has no "zombie
       spinner" (PRD req 18).
 - [ ] 5.3 Mark dirty at the conversation change points (message append, responses
-      received, message edit, regenerate/branch) instead of any direct save.
-- [ ] 5.4 Add a `new_session()` (flush-if-dirty, clear conversation back to the
-      system + empty user message, reset id/flag) and a **New Session** button
-      with a confirmation dialog.
+      received, message edit, regenerate/branch) instead of any direct save —
+      including edits to the user/system message text fields (PRD §10.6, the
+      Prompts analogue of GlossTab's main-input `onTextChanged`).
+- [ ] 5.4 Add a `new_session()` (flush-if-dirty via the **blocking** flush, clear
+      conversation back to the system + empty user message, reset
+      id/flag/`selected_history_id`, then `load_history()`) and a **New Session**
+      button with a confirmation dialog. **External entry (PRD §10.7):** route
+      `SuttaSearchWindow.new_prompt` → `PromptsTab.new_prompt` through the same
+      confirm/new-session path when a non-empty conversation is in progress, and
+      detach `current_session_id` when starting fresh from an empty-but-loaded
+      session, so it never overwrites the previously opened session's row.
 - [ ] 5.5 Add the **Save** button + save-state indicator (bound to
       `session_needs_saving`) in a top toolbar row, matching GlossTab.
 - [ ] 5.6 Replace the History sub-tab placeholder (`:617`) with the real
       `ListView` of `HistoryListItem` + **Clear** button (confirm dialog); wire
-      select / open (flush-then-load) / delete.
+      select / open (flush-then-load) / delete. **Reset `current_session_id = ""`
+      on Clear, and on Delete of the active session** (PRD §10.1).
 - [ ] 5.7 Implement `load_history()` via `get_history_json_background("prompts")`
       + `historyListReady` (filter `item_type === "prompts"`); refresh after
       Save/New Session/Open/Delete/Clear. **Add the activation trigger:** the
@@ -302,10 +337,13 @@ so it completes before the process exits. Hook into the existing
 **Depends on:** tasks 4.0, 5.0 (tabs expose a flush function) and 2.5 (blocking
 bridge fn).
 
-- [ ] 6.1 Expose a `flush_if_needed()` function on GlossTab and PromptsTab that,
-      when `session_needs_saving`, calls the **blocking** bridge save
-      (`save_history_session_blocking`) and clears the flag (skips empty
-      sessions). It must be idempotent (safe to call twice / when already clean).
+- [ ] 6.1 Ensure `flush_if_needed()` exists on both tabs: when
+      `session_needs_saving` and the session is non-empty, it calls
+      `save_session(true)` (the **blocking** variant, which clears the flag and
+      `save_again_pending`). It must be idempotent (safe to call twice / when
+      already clean). **Already implemented on GlossTab in task 4.x**; PromptsTab
+      gets it in task 5.2. Do not duplicate the blocking bridge call at the call
+      sites — go through `flush_if_needed()` (PRD §10.4).
 - [ ] 6.2 Call `gloss_tab.flush_if_needed()` and `prompts_tab.flush_if_needed()`
       from `SuttaSearchWindow.qml` `onClosing` (`:19`). **Mobile caveat:** the
       handler sets `close.accepted = false` on mobile (`:20-23`), so there is no
@@ -321,13 +359,21 @@ bridge fn).
       module) for the CRUD helpers against the real appdata DB: save-new returns
       id, update changes `data_json`/`updated_at`, list is newest-first and
       `item_type`-scoped, delete-one and clear-all, and that `"gloss"` vs
-      `"prompts"` rows don't cross-contaminate.
+      `"prompts"` rows don't cross-contaminate. **Also cover the stale-row contract
+      (PRD §10.1):** `update_history` returns `0` for a deleted/non-existent id
+      (so the bridge's INSERT-fallback triggers), and a save against an id removed
+      by `clear_history` re-creates a row rather than vanishing.
 - [ ] 7.2 Run `cd backend && cargo test` and confirm the new tests pass (ignore
       unrelated pre-existing failures per repo guidance).
 - [ ] 7.3 Run `make build -B` for a clean full build.
 - [ ] 7.4 Update `PROJECT_MAP.md` with the new table, bridge functions, shared
       QML component, and the session-lifecycle additions to both tabs.
 - [ ] 7.5 Update `docs/user-data-and-sqlite-analyze.md` (new runtime-growing
-      table + any `ANALYZE` hook) and note the history feature in
-      `docs/startup-sequence-and-caches.md` if relevant; add a short feature doc
-      if warranted.
+      table + the **no per-save `ANALYZE`** decision from task 1.7) and note the
+      history feature in `docs/startup-sequence-and-caches.md` if relevant. **Add a
+      short feature doc** (e.g. `docs/gloss-prompts-history.md`) capturing the
+      shared session-lifecycle state machine and the gotchas/fixes from **PRD
+      §10** (single-writer + coalesce, empty-id failure contract, stale-row
+      INSERT-fallback, blocking flush rationale, spurious-dirty-on-load), since the
+      PRD/tasks files are transient and the gotchas are load-bearing for future
+      edits to either tab. Link it from `CLAUDE.md`/`AGENTS.md` notable-docs list.

@@ -431,3 +431,85 @@ truncate/single-line helper do not exist yet.
    existing shutdown hook to attach it to (see Technical Considerations).
 7. *(Resolved → requirement 10a)* Saves run as background operations off the UI
    thread; the only synchronous case is the app-close flush (requirement 17).
+
+## 10. Implementation gotchas and fixes (discovered during the GlossTab build)
+
+These were found while implementing and testing the Gloss tab (tasks 3.0–4.0).
+They are the **load-bearing correctness details of the shared session
+lifecycle** and **must be replicated in PromptsTab (task 5.0) and the close flush
+(task 6.0)** — they are not Gloss-specific. The state-machine they describe is:
+`session_needs_saving` / `save_in_flight` / `save_again_pending` /
+`refresh_list_on_save` / `current_session_id` (string, `""` = no row yet).
+
+1. **Stale `current_session_id` after its row is removed → silent data loss.**
+   Deleting the active session's row (Delete) or clearing all (Clear) leaves
+   `current_session_id` pointing at a row that no longer exists; the next save runs
+   an UPDATE that matches 0 rows and the work vanishes. **Two-layer fix:**
+   - *Backend:* `update_history` returns the affected row count (`Result<usize>`),
+     and `save_history_session_impl` **falls back to INSERT when the UPDATE affects
+     0 rows** (catches the active session's row being deleted/cleared, plus any
+     race). This is in shared bridge/DB code, so PromptsTab inherits it.
+   - *QML:* on **Clear** reset `current_session_id = ""`; on **Delete** reset it
+     only when the deleted id equals the active session.
+
+2. **Stuck `save_in_flight` on a save failure → autosave dies.** The async save
+   bridge must **always** emit `historySaved`; an **empty resolved id signals
+   failure**. The QML handler then: resets `save_in_flight`, **keeps the session
+   dirty** (so the next tick retries), and **does not** clobber
+   `current_session_id`. (If it only emitted on success, a single failed write
+   would leave `save_in_flight = true` forever and block all future autosaves,
+   which are gated on `!save_in_flight`.)
+
+3. **Duplicate INSERT from concurrent writes.** Before the first save resolves an
+   id (`current_session_id === ""`), two overlapping writes both INSERT → two rows
+   for one session (e.g. double-clicking Save). **Single-writer + coalesce:** the
+   async `save_session` returns early setting `save_again_pending = true` when
+   `save_in_flight`; `onHistorySaved` runs the one coalesced follow-up **after**
+   the id is known (so it UPDATEs, never a second INSERT). The blocking path clears
+   `save_again_pending`. The autosave `Timer` also gates on `!save_in_flight`.
+
+4. **Blocking flush for Open/New is deliberate, not a req-10a violation.** Open and
+   New Session flush the *current* session with the **blocking** bridge call, not
+   async: an async flush's `historySaved` would arrive **after** the subsequent
+   `load_session`/reset and clobber `current_session_id` with the flushed
+   session's new id. `data_json` is serialized synchronously *before* any load, so
+   the blocking write is safe and the UI pause is brief. (The app-close flush in
+   req 17 is blocking for a different reason — guaranteed completion before exit.)
+
+5. **Spurious "unsaved" right after a load.** Setting the input field
+   programmatically fires its change handler and marks the session dirty, so
+   `load_session`/`new_session` must set `session_needs_saving = false` **at the
+   end**, after assigning the input text and populating the model. Per-item
+   delegate change handlers must guard against firing during delegate
+   instantiation on load (Gloss uses `if (text !== model_text)` on the paragraph
+   `TextArea` and `if (currentIndex !== selected_index)` on the word `ComboBox`).
+   **PromptsTab must apply the same guard when rebuilding `messages_model`.**
+
+6. **A change in the main input is a savable event.** The top-level input
+   (`gloss_text_input.onTextChanged` in Gloss; the user-message editors in
+   Prompts) must mark the session dirty, in addition to the deeper change points.
+
+7. **External entry points must not overwrite the active session.** The sutta
+   HTML menu's "Gloss Selection" (`SuttaSearchWindow.gloss_text`) used to replace
+   the current gloss text directly. It must instead: if a non-empty session is in
+   progress, **confirm** ("Save the current session and start a new one with the
+   selected text?") then `new_session()` + load the selection; if the session is
+   empty **but still carries a `current_session_id`** (a loaded session whose text
+   was manually cleared), **detach** (`current_session_id = ""`) before glossing
+   so it INSERTs a fresh row instead of overwriting the old one. **PromptsTab's
+   external entry (`SuttaSearchWindow.new_prompt` → `PromptsTab.new_prompt`) needs
+   the analogous confirm/new-session/detach treatment.**
+
+### Residual known limitations (accepted — rare, no data loss)
+
+- **Edit during an in-flight autosave:** the dirty flag is cleared on the write's
+  completion even though a later edit re-set it, so that edit isn't re-flagged
+  until the next change. Bounded by the 60 s cadence + the close flush; req 10a
+  prefers clear-on-completion, so this is accepted.
+- **Blocking flush while an async autosave is in flight** (an Open/New within
+  ~50 ms of a 60 s tick): can produce one duplicate row and a transiently wrong
+  `current_session_id`; self-corrects on the next save/load. Not data loss.
+- **AI-translations view tab-select on load:** if that component emits its
+  `tabSelectionChanged` when `selected_tab_index` is set programmatically during
+  restore, a freshly opened session briefly shows "unsaved" (benign, idempotent
+  re-save). Verify when wiring Prompts' analogous restore.
