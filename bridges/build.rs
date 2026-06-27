@@ -72,6 +72,8 @@ fn main() {
         "../assets/qml/BookmarksTab.qml",
         "../assets/qml/BookmarkFolderItem.qml",
         "../assets/qml/BookmarkListItem.qml",
+        "../assets/qml/HistoryListItem.qml",
+        "../assets/qml/HistoryUtils.qml",
         "../assets/qml/BookmarkEditDialog.qml",
         "../assets/qml/BookmarkFolderDialog.qml",
         "../assets/qml/DictionaryIndexProgressWindow.qml",

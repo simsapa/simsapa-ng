@@ -160,6 +160,22 @@ Notable feature docs:
   Play without touching the QML URI (a ~70-site, no-benefit refactor). Covers why
   the Android FileProvider authority and `/data/user/0/<pkg>/` data dir derive
   automatically from the package, and the change checklist.
+- [Gloss / Prompts session history](./docs/gloss-prompts-history.md) — the shared,
+  `item_type`-parameterised history feature for the **Gloss** and **Prompts** tabs
+  (table `gloss_prompts_history`, the shared bridge fns + signals, the
+  `HistoryListItem`/`HistoryUtils` QML, and the per-tab serialize/restore). Covers
+  the **shared session-lifecycle state machine** (`session_needs_saving` /
+  `save_in_flight` / `save_again_pending` / `refresh_list_on_save` /
+  `current_session_id`) and the **load-bearing gotchas both tabs must keep in
+  sync**: the stale-`current_session_id` INSERT-fallback (`update_history` →
+  affected-row count), the empty-id = failure contract, single-writer + coalesce,
+  the **blocking** flush for Open/New/close (vs background autosave),
+  spurious-dirty-on-load guards, external-entry confirm/detach, the Prompts
+  in-flight-response normalization, and the **RichText height** fix in
+  `AssistantResponses.qml` (a one-shot `itemAt()` height binding truncated restored
+  multi-line responses; the height is now pushed up via
+  `Layout.onPreferredHeightChanged`). **No per-save `ANALYZE`** (see
+  [user-data-and-sqlite-analyze.md](./docs/user-data-and-sqlite-analyze.md)).
 
 ## Specific coding procedures
 

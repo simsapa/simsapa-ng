@@ -99,6 +99,7 @@ Item {
             // Update the assistant message with new responses
             messages_model.setProperty(assistant_message_idx, "responses_json", JSON.stringify(responses));
             logger.info(`💾 Saved responses_json to message model`);
+            root.session_needs_saving = true;
         }
     }
 
@@ -110,6 +111,87 @@ Item {
 
     ListModel { id: messages_model }
     ListModel { id: available_models }
+
+    // Current session id ("" = no DB row yet).
+    property string current_session_id: ""
+
+    // Session lifecycle (see docs/gloss-prompts-history.md):
+    // change events only mark the session dirty; the autosave Timer flushes.
+    property bool session_needs_saving: false
+    property bool save_in_flight: false
+    // A save was requested while one was already in flight; run one more after it
+    // resolves (prevents duplicate INSERTs and keeps the latest state).
+    property bool save_again_pending: false
+    // Set true by explicit Save / New Session so the History list refreshes when
+    // the next save completes; the autosave path leaves it false (PRD req 11).
+    property bool refresh_list_on_save: false
+    // Currently selected (highlighted) history row id; -1 = none. Selection only,
+    // no load — Open loads.
+    property int selected_history_id: -1
+
+    // Stores recent prompt sessions.
+    ListModel { id: history_model }
+
+    // Debounced autosave: only writes when the session is dirty and no write is
+    // already in flight; an idle session causes zero DB access.
+    Timer {
+        id: autosave_timer
+        interval: 60000
+        repeat: true
+        running: true
+        onTriggered: {
+            if (root.session_needs_saving && !root.save_in_flight) {
+                root.save_session();
+            }
+        }
+    }
+
+    Connections {
+        target: SuttaBridge
+
+        function onHistorySaved(item_type: string, session_id: string) {
+            if (item_type !== "prompts") return;
+            root.save_in_flight = false;
+            // Empty id = save failed: keep the session dirty so the next tick
+            // retries, and don't clobber current_session_id.
+            if (session_id.length === 0) {
+                logger.error("Prompts session save failed; will retry on next tick.");
+                return;
+            }
+            root.current_session_id = session_id;
+            root.session_needs_saving = false;
+            // Refresh the list only for explicit Save / New Session writes, never
+            // on the autosave path (PRD req 11).
+            if (root.refresh_list_on_save) {
+                root.refresh_list_on_save = false;
+                root.load_history();
+            }
+            // A save was requested while this one was in flight; run it now that
+            // current_session_id is known (so it UPDATEs, not a duplicate INSERT).
+            if (root.save_again_pending) {
+                root.save_again_pending = false;
+                root.save_session();
+            }
+        }
+
+        function onHistoryChanged(item_type: string) {
+            if (item_type !== "prompts") return;
+            root.load_history();
+        }
+
+        function onHistoryListReady(item_type: string, json: string) {
+            if (item_type !== "prompts") return;
+            history_model.clear();
+            try {
+                var items = JSON.parse(json);
+                for (var i = 0; i < items.length; i++) {
+                    history_model.append(items[i]);
+                }
+            } catch (e) {
+                logger.error("Failed to parse prompts history json: " + e);
+            }
+        }
+    }
 
     function load_available_models() {
         logger.info(`🔄 Loading available models from all providers...`);
@@ -180,6 +262,7 @@ Item {
 
                     // Update the model
                     messages_model.setProperty(message_idx, "responses_json", JSON.stringify(responses));
+                    root.session_needs_saving = true;
 
                     // Compose message history up to the user message that triggered the original request
                     let user_message_idx = message_idx - 1; // Assistant message is after user message
@@ -228,28 +311,13 @@ Item {
         var message = messages_model.get(message_idx);
         if (message) {
             messages_model.setProperty(message_idx, "selected_ai_tab", tab_index);
+            root.session_needs_saving = true;
         }
     }
 
     Component.onCompleted: {
-        // Load system prompt dynamically from database
-        let system_prompt_text = SuttaBridge.get_system_prompt("Prompts Tab: System Prompt");
-
-        // Add a system prompt and an empty user message.
-        messages_model.append({
-            role: "system",
-            content: system_prompt_text,
-            content_html: "",
-            responses_json: "[]",
-            selected_ai_tab: 0
-        });
-        messages_model.append({
-            role: "user",
-            content: "",
-            content_html: "",
-            responses_json: "[]",
-            selected_ai_tab: 0
-        });
+        root.init_messages("");
+        root.load_history();
 
         // Initialize ScrollableHelper after initial messages
         Qt.callLater(function() {
@@ -262,7 +330,10 @@ Item {
         target_scroll_view: messages_scroll_view
     }
 
-    function new_prompt(prompt: string) {
+    // Reset the conversation to a system prompt + a single user message (with
+    // optional initial text). Shared by Component.onCompleted, new_session(), and
+    // the external new_prompt() entry.
+    function init_messages(prompt: string) {
         messages_model.clear();
 
         // Load system prompt dynamically from database
@@ -272,15 +343,226 @@ Item {
             role: "system",
             content: system_prompt_text,
             content_html: "",
+            responses_json: "[]",
+            selected_ai_tab: 0
         });
         messages_model.append({
             role: "user",
-            content: prompt,
+            content: prompt || "",
             content_html: "",
+            responses_json: "[]",
+            selected_ai_tab: 0
         });
+    }
+
+    // External entry (e.g. the sutta HTML menu's "Prompt with Selection"). Mirrors
+    // GlossTab.gloss_selected_text (PRD §10.7): never silently overwrite the active
+    // session.
+    function new_prompt(prompt: string) {
+        if (root.is_session_empty()) {
+            // An empty session may still carry a current_session_id (a loaded
+            // session whose text was cleared). Detach so the new conversation
+            // INSERTs a fresh row instead of overwriting that old session.
+            root.current_session_id = "";
+            root.selected_history_id = -1;
+            root.start_prompt_with_text(prompt);
+            return;
+        }
+        msg_dialog_cancel_ok.text = "Save the current conversation and start a new one with the selected text?";
+        msg_dialog_cancel_ok.accept_fn = function() {
+            root.new_session();
+            root.start_prompt_with_text(prompt);
+        };
+        msg_dialog_cancel_ok.open();
+    }
+
+    function start_prompt_with_text(prompt: string) {
+        root.init_messages(prompt);
+        // The init above set the user message programmatically; clear the flag so a
+        // freshly started conversation isn't marked dirty before the send.
+        root.session_needs_saving = false;
         var item = messages_repeater.itemAt(1);
         if (item && item.send_btn) {
             item.send_btn.click();
+        }
+    }
+
+    // A session is "empty" (skip saving — PRD req 15) when there is no user message
+    // with content and no assistant response text.
+    function is_session_empty(): bool {
+        for (var i = 0; i < messages_model.count; i++) {
+            var m = messages_model.get(i);
+            if (m.role === "user" && m.content && m.content.trim().length > 0) {
+                return false;
+            }
+            if (m.role === "assistant" && m.responses_json) {
+                try {
+                    var rs = JSON.parse(m.responses_json);
+                    for (var j = 0; j < rs.length; j++) {
+                        if (rs[j].response && rs[j].response.trim().length > 0) {
+                            return false;
+                        }
+                    }
+                } catch (e) {
+                    // ignore parse errors here; empty-check is best-effort
+                }
+            }
+        }
+        return true;
+    }
+
+    // Serialize the FULL conversation needed for faithful restore (PRD req 18):
+    // every message's { role, content, content_html, responses_json,
+    // selected_ai_tab } in order. In-flight (waiting/pending) responses are
+    // normalized to "error" so a restored conversation has no zombie spinner.
+    function session_data_json(): string {
+        var data = { messages: [] };
+
+        for (var i = 0; i < messages_model.count; i++) {
+            var m = messages_model.get(i);
+            var responses_json = m.responses_json || "[]";
+
+            if (m.role === "assistant" && responses_json) {
+                try {
+                    var rs = JSON.parse(responses_json);
+                    var changed = false;
+                    for (var j = 0; j < rs.length; j++) {
+                        if (rs[j].status === "waiting" || rs[j].status === "pending") {
+                            rs[j].status = "error";
+                            if (!rs[j].response || rs[j].response.trim().length === 0) {
+                                rs[j].response = "Interrupted: response not completed.";
+                            }
+                            changed = true;
+                        }
+                    }
+                    if (changed) {
+                        responses_json = JSON.stringify(rs);
+                    }
+                } catch (e) {
+                    logger.error("Failed to normalize responses_json on save: " + e);
+                }
+            }
+
+            data.messages.push({
+                role: m.role,
+                content: m.content || "",
+                content_html: m.content_html || "",
+                responses_json: responses_json,
+                selected_ai_tab: m.selected_ai_tab || 0
+            });
+        }
+
+        return JSON.stringify(data);
+    }
+
+    // Write the current session. Normally async (off the UI thread); the close
+    // path passes `blocking = true` so the write completes before exit (PRD
+    // reqs 10a, 17). Skips empty sessions and does NOT reload the history list on
+    // the autosave path (PRD req 11).
+    function save_session(blocking) {
+        if (root.is_session_empty()) {
+            return;
+        }
+
+        var data_json = root.session_data_json();
+
+        if (blocking === true) {
+            var resolved = SuttaBridge.save_history_session_blocking("prompts", root.current_session_id, data_json);
+            if (resolved && resolved.length > 0) {
+                root.current_session_id = resolved;
+            }
+            root.session_needs_saving = false;
+            root.save_in_flight = false;
+            root.save_again_pending = false;
+            return;
+        }
+
+        // Single-writer + coalesce: never start a second concurrent write (would
+        // INSERT a duplicate row for a not-yet-persisted new session). The
+        // follow-up runs in onHistorySaved once current_session_id is known.
+        if (root.save_in_flight) {
+            root.save_again_pending = true;
+            return;
+        }
+
+        root.save_in_flight = true;
+        SuttaBridge.save_history_session_background("prompts", root.current_session_id, data_json);
+    }
+
+    // Explicit Save button / New Session flush: kick off the write now and have
+    // the completion refresh the history list (PRD reqs 11, 12).
+    function save_session_now() {
+        if (root.is_session_empty()) {
+            return;
+        }
+        root.refresh_list_on_save = true;
+        root.save_session();
+    }
+
+    // Flush any pending changes to the *current* session before switching away
+    // (PRD reqs 16, 17). Blocking on purpose: an async flush's historySaved would
+    // arrive after the subsequent load/reset and clobber current_session_id.
+    function flush_if_needed() {
+        if (root.session_needs_saving && !root.is_session_empty()) {
+            root.save_session(true);
+        }
+    }
+
+    // Start a fresh session (PRD req 14): flush the current one, then reset the
+    // conversation back to the system + empty user message.
+    function new_session() {
+        root.flush_if_needed();
+        root.current_session_id = "";
+        root.selected_history_id = -1;
+        root.init_messages("");
+        // init set the user message programmatically; set the flag false LAST so
+        // the reset session isn't spuriously marked dirty (PRD §10.5).
+        root.session_needs_saving = false;
+        // The flush above was blocking (no async historySaved), so refresh the
+        // list directly so the flushed session shows.
+        root.load_history();
+    }
+
+    function load_history() {
+        // Async: results arrive via the historyListReady signal.
+        SuttaBridge.get_history_json_background("prompts");
+    }
+
+    // Open a history item: flush the current session first (PRD req 16), then load.
+    function open_history_item(item_data) {
+        root.flush_if_needed();
+        // Switch to the Prompt working area BEFORE rebuilding the model: the
+        // response TextAreas render as RichText, and their contentHeight is
+        // computed wrong (truncating multi-line responses) if the delegates are
+        // created while this page is the hidden StackLayout page. Building them
+        // while visible replicates the working live-send condition.
+        tab_bar.currentIndex = 0;
+        root.load_session("" + item_data.id, item_data.data);
+        root.selected_history_id = item_data.id;
+    }
+
+    // Rebuild messages_model from saved data_json. Sets session_needs_saving=false
+    // LAST so programmatic model changes during restore don't mark it dirty
+    // (PRD §10.5).
+    function load_session(db_id, data_json) {
+        try {
+            var data = JSON.parse(data_json);
+            messages_model.clear();
+            var msgs = data.messages || [];
+            for (var i = 0; i < msgs.length; i++) {
+                var m = msgs[i];
+                messages_model.append({
+                    role: m.role || "user",
+                    content: m.content || "",
+                    content_html: m.content_html || "",
+                    responses_json: m.responses_json || "[]",
+                    selected_ai_tab: m.selected_ai_tab || 0
+                });
+            }
+            root.current_session_id = db_id;
+            root.session_needs_saving = false;
+        } catch (e) {
+            logger.error("Failed to load prompts session: " + e);
         }
     }
 
@@ -542,6 +824,14 @@ Item {
         anchors.left: parent.left
         anchors.right: parent.right
 
+        // Refresh the history list when the History sub-tab becomes visible
+        // (PRD req 11 — the list is not refreshed on the autosave path).
+        onCurrentIndexChanged: {
+            if (tab_bar.currentIndex === 1) {
+                root.load_history();
+            }
+        }
+
         TabButton {
             text: "Prompt"
         }
@@ -574,6 +864,41 @@ Item {
                 Layout.topMargin: 20
                 width: parent.width
                 spacing: 20
+
+                // Session toolbar: New Session, Save, and the save-state indicator.
+                RowLayout {
+                    Layout.topMargin: 10
+                    Layout.leftMargin: 10
+                    Layout.rightMargin: 10
+                    Layout.fillWidth: true
+                    spacing: 10
+
+                    Button {
+                        id: new_session_btn
+                        text: "New Session"
+                        onClicked: {
+                            msg_dialog_cancel_ok.text = "Start a new session? The current session will be saved to history.";
+                            msg_dialog_cancel_ok.accept_fn = function() { root.new_session(); };
+                            msg_dialog_cancel_ok.open();
+                        }
+                    }
+
+                    Button {
+                        id: save_session_btn
+                        text: "Save"
+                        enabled: root.session_needs_saving
+                        onClicked: root.save_session_now()
+                    }
+
+                    Label {
+                        id: save_state_label
+                        text: root.session_needs_saving ? "Unsaved changes" : "Saved"
+                        color: root.session_needs_saving ? "#E07B39" : root.text_color
+                        font.pointSize: 10
+                    }
+
+                    Item { Layout.fillWidth: true }
+                }
 
                 RowLayout {
                     Layout.topMargin: 10
@@ -615,14 +940,77 @@ Item {
         }
 
         // History Tab
-        ScrollView {
-            Label { text: "History" }
-            // ListView {
-            //     anchors.fill: parent
-            //     model: history_model
-            //     spacing: 10
-            //     delegate: historyItemDelegate
-            // }
+        ColumnLayout {
+            spacing: 10
+
+            RowLayout {
+                Layout.fillWidth: true
+                Layout.margins: 10
+                spacing: 10
+
+                Label {
+                    text: "Saved sessions"
+                    font.pointSize: 11
+                    font.bold: true
+                }
+
+                Item { Layout.fillWidth: true }
+
+                Button {
+                    text: "Clear"
+                    enabled: history_model.count > 0
+                    onClicked: {
+                        msg_dialog_cancel_ok.text = "Clear all prompts history? This cannot be undone.";
+                        msg_dialog_cancel_ok.accept_fn = function() {
+                            SuttaBridge.clear_history("prompts");
+                            root.selected_history_id = -1;
+                            // The active session's row is gone; detach so the next
+                            // save INSERTs a fresh row instead of a no-op UPDATE.
+                            root.current_session_id = "";
+                        };
+                        msg_dialog_cancel_ok.open();
+                    }
+                }
+            }
+
+            ListView {
+                id: history_list_view
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                Layout.leftMargin: 10
+                Layout.rightMargin: 10
+                Layout.bottomMargin: 10
+                clip: true
+                spacing: 4
+                model: history_model
+
+                ScrollBar.vertical: ScrollBar {}
+
+                delegate: HistoryListItem {
+                    width: history_list_view.width
+                    required property var model
+                    item_data: model
+                    item_type: "prompts"
+                    is_dark: root.is_dark
+                    is_selected: root.selected_history_id === model.id
+                    onSelect_clicked: function(item_id) { root.selected_history_id = item_id; }
+                    onOpen_clicked: function(item_data) { root.open_history_item(item_data); }
+                    onDelete_clicked: function(item_id) {
+                        if (root.selected_history_id === item_id) root.selected_history_id = -1;
+                        // If the deleted row is the active session, detach so the
+                        // next save INSERTs a fresh row instead of a no-op UPDATE.
+                        if (root.current_session_id === ("" + item_id)) root.current_session_id = "";
+                        SuttaBridge.delete_history_item("prompts", item_id);
+                    }
+                }
+
+                Label {
+                    anchors.centerIn: parent
+                    visible: history_model.count === 0
+                    text: "No saved sessions yet."
+                    opacity: 0.6
+                }
+            }
         }
 
         Component {
@@ -850,6 +1238,10 @@ Item {
                                     color: "transparent"
                                 }
                                 onTextChanged: {
+                                    // Guard against firing during delegate
+                                    // instantiation on load (PRD §10.5/§10.6): only
+                                    // a real user edit (text differs from the model)
+                                    // marks the session dirty.
                                     if (text !== message_item.content) {
                                         messages_model.set(message_item.index, {
                                             role: message_item.role,
@@ -858,6 +1250,7 @@ Item {
                                             responses_json: message_item.responses_json || "",
                                             selected_ai_tab: message_item.selected_ai_tab || 0
                                         });
+                                        root.session_needs_saving = true;
                                     }
                                 }
                             }
@@ -982,6 +1375,7 @@ Item {
                                         }
 
                                         root.waiting_for_response = true;
+                                        root.session_needs_saving = true;
 
                                         // Scroll to bottom to show waiting message
                                         scroll_helper.scroll_to_bottom();

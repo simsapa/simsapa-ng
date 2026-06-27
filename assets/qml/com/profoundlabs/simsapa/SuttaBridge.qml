@@ -422,16 +422,24 @@ Item {
         return;
     }
 
-    function get_gloss_history_json(): string {
-        return "[]";
-    }
-
-    function update_gloss_session(session_uid: string, gloss_data_json: string) {
+    function get_history_json_background(item_type: string) {
         return;
     }
 
-    function save_new_gloss_session(gloss_data_json: string): string {
-        return "session-123"; // saved db unique key
+    function save_history_session_background(item_type: string, session_id: string, data_json: string) {
+        return;
+    }
+
+    function save_history_session_blocking(item_type: string, session_id: string, data_json: string): string {
+        return "123"; // resolved session id
+    }
+
+    function delete_history_item(item_type: string, id: int) {
+        return;
+    }
+
+    function clear_history(item_type: string) {
+        return;
     }
 
     function save_anki_csv(csv_content: string): string {
@@ -1000,6 +1008,11 @@ Item {
     }
 
     signal waveformDataReady(recording_uid: string, waveform_json: string)
+
+    // Gloss / Prompts history signals
+    signal historyListReady(item_type: string, json: string)
+    signal historySaved(item_type: string, session_id: string)
+    signal historyChanged(item_type: string)
 
     function generate_waveform_data(recording_uid: string, file_path: string, num_bars: int) {
     }

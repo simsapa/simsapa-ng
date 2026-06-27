@@ -141,12 +141,28 @@ ColumnLayout {
             StackLayout {
                 id: stack_layout
                 Layout.fillWidth: true
-                Layout.preferredHeight: {
-                    // Get the current item and use its preferred height
-                    var current_item = itemAt(currentIndex)
-                    return current_item ? current_item.Layout.preferredHeight : 200
-                }
                 currentIndex: tab_bar.currentIndex
+
+                // The selected response renders as RichText; its TextArea
+                // contentHeight settles only after the document is laid out at the
+                // final width, which can happen AFTER a one-shot height binding
+                // first runs (notably when a saved session is restored and the
+                // delegates are built before layout). A binding using itemAt() is
+                // not reactive to those late updates, so the height would freeze at
+                // a too-small value and truncate the response. Instead drive the
+                // height from a plain property that the inner items push to via
+                // signal handlers, so it always tracks the current content height.
+                property real content_height: 200
+                Layout.preferredHeight: content_height
+
+                function refresh_height() {
+                    var it = itemAt(currentIndex);
+                    if (it) {
+                        content_height = it.Layout.preferredHeight;
+                    }
+                }
+                onCurrentIndexChanged: refresh_height()
+                onVisibleChanged: if (visible) refresh_height()
 
                 Repeater {
                     model: root.translations_data || []
@@ -159,6 +175,20 @@ ColumnLayout {
 
                         Layout.fillWidth: true
                         Layout.preferredHeight: Math.max(text_area.contentHeight + root.vocab_tm1.height, 200)
+
+                        // Propagate height changes (including late RichText
+                        // contentHeight updates) up to the StackLayout for the
+                        // currently selected response.
+                        Layout.onPreferredHeightChanged: {
+                            if (index === stack_layout.currentIndex) {
+                                stack_layout.content_height = Layout.preferredHeight;
+                            }
+                        }
+                        Component.onCompleted: {
+                            if (index === stack_layout.currentIndex) {
+                                stack_layout.content_height = Layout.preferredHeight;
+                            }
+                        }
 
                         TextArea {
                             id: text_area

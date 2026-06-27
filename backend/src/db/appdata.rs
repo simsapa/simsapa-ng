@@ -1878,5 +1878,220 @@ impl AppdataDbHandle {
             }
         }
     }
+
+    // Gloss / Prompts history CRUD.
+    //
+    // NOTE: intentionally NO per-save `ANALYZE` here. `DatabaseHandle::analyze`
+    // runs a full-DB ANALYZE over all appdata tables, which would be wasteful on
+    // every 60s autosave. It is also unnecessary: the only query is a
+    // single-table equality + order (`WHERE item_type = ? ORDER BY updated_at
+    // DESC`) fully served by the `(item_type, updated_at)` index, which SQLite
+    // plans correctly without stats. See
+    // docs/user-data-and-sqlite-analyze.md (the slow-query case there was a
+    // multi-table join, not this shape).
+
+    pub fn get_history_for_type(&self, item_type_param: HistoryItemType) -> Vec<GlossPromptsHistory> {
+        use crate::db::appdata_schema::gloss_prompts_history::dsl::*;
+
+        let result = self.do_read(|db_conn| {
+            gloss_prompts_history
+                .filter(item_type.eq(item_type_param.as_str()))
+                .order(updated_at.desc())
+                .select(GlossPromptsHistory::as_select())
+                .load(db_conn)
+        });
+
+        match result {
+            Ok(items) => items,
+            Err(e) => {
+                error(&format!("get_history_for_type(): {}", e));
+                Vec::new()
+            }
+        }
+    }
+
+    pub fn save_new_history(&self, item_type_param: HistoryItemType, data_json_param: &str) -> Result<i32> {
+        use crate::db::appdata_schema::gloss_prompts_history::dsl::*;
+
+        let now = chrono::Utc::now().naive_utc();
+        let item = NewGlossPromptsHistory {
+            item_type: item_type_param.as_str(),
+            data_json: data_json_param,
+            created_at: Some(now),
+            updated_at: Some(now),
+        };
+
+        self.do_write(|db_conn| {
+            diesel::insert_into(gloss_prompts_history)
+                .values(&item)
+                .execute(db_conn)?;
+
+            gloss_prompts_history
+                .order(id.desc())
+                .select(id)
+                .first::<i32>(db_conn)
+        })
+    }
+
+    /// Updates an existing history row, returning the number of rows affected
+    /// (0 if `id_param` no longer exists, e.g. it was deleted/cleared). Callers
+    /// use the count to fall back to an INSERT rather than silently losing data.
+    pub fn update_history(&self, id_param: i32, data_json_param: &str) -> Result<usize> {
+        use crate::db::appdata_schema::gloss_prompts_history::dsl::*;
+
+        let now = chrono::Utc::now().naive_utc();
+        self.do_write(|db_conn| {
+            diesel::update(gloss_prompts_history.find(id_param))
+                .set((
+                    data_json.eq(data_json_param),
+                    updated_at.eq(Some(now)),
+                ))
+                .execute(db_conn)
+        })
+    }
+
+    pub fn delete_history_item(&self, id_param: i32) -> Result<()> {
+        use crate::db::appdata_schema::gloss_prompts_history::dsl::*;
+
+        self.do_write(|db_conn| {
+            diesel::delete(gloss_prompts_history.find(id_param))
+                .execute(db_conn)
+                .map(|_| ())
+        })
+    }
+
+    pub fn clear_history(&self, item_type_param: HistoryItemType) -> Result<()> {
+        use crate::db::appdata_schema::gloss_prompts_history::dsl::*;
+
+        self.do_write(|db_conn| {
+            diesel::delete(gloss_prompts_history.filter(item_type.eq(item_type_param.as_str())))
+                .execute(db_conn)
+                .map(|_| ())
+        })
+    }
+}
+
+#[cfg(test)]
+mod history_tests {
+    use super::AppdataDbHandle;
+    use crate::db::{DatabaseHandle, APPDATA_MIGRATIONS};
+    use crate::db::appdata_models::HistoryItemType;
+    use diesel_migrations::MigrationHarness;
+
+    // Build the appdata schema (including gloss_prompts_history) in a throwaway
+    // temp SQLite DB so the CRUD tests never touch the shipped/user appdata DB
+    // (clear/delete here would be destructive against the real one).
+    fn setup() -> AppdataDbHandle {
+        let mut path = std::env::temp_dir();
+        path.push(format!(
+            "simsapa_history_test_{}_{}.sqlite3",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        let url = path.to_string_lossy().to_string();
+        let handle = DatabaseHandle::new(&url).expect("create temp appdata handle");
+        let mut conn = handle.get_conn().expect("get temp appdata conn");
+        conn.run_pending_migrations(APPDATA_MIGRATIONS)
+            .expect("run appdata migrations on temp db");
+        handle
+    }
+
+    #[test]
+    fn save_new_returns_increasing_ids() {
+        let db = setup();
+        let id1 = db.save_new_history(HistoryItemType::Gloss, "{\"text\":\"a\"}").unwrap();
+        let id2 = db.save_new_history(HistoryItemType::Gloss, "{\"text\":\"b\"}").unwrap();
+        assert!(id1 > 0);
+        assert!(id2 > id1);
+    }
+
+    #[test]
+    fn update_changes_data_and_timestamp() {
+        let db = setup();
+        let id = db.save_new_history(HistoryItemType::Prompts, "{\"v\":1}").unwrap();
+        let before = db.get_history_for_type(HistoryItemType::Prompts);
+        let before_updated = before.iter().find(|r| r.id == id).unwrap().updated_at;
+
+        std::thread::sleep(std::time::Duration::from_millis(5));
+        let affected = db.update_history(id, "{\"v\":2}").unwrap();
+        assert_eq!(affected, 1);
+
+        let after = db.get_history_for_type(HistoryItemType::Prompts);
+        let after_row = after.iter().find(|r| r.id == id).unwrap();
+        assert_eq!(after_row.data_json, "{\"v\":2}");
+        assert!(after_row.updated_at >= before_updated);
+    }
+
+    #[test]
+    fn list_is_newest_first_and_type_scoped() {
+        let db = setup();
+        let g1 = db.save_new_history(HistoryItemType::Gloss, "g1").unwrap();
+        std::thread::sleep(std::time::Duration::from_millis(5));
+        let g2 = db.save_new_history(HistoryItemType::Gloss, "g2").unwrap();
+        let _p1 = db.save_new_history(HistoryItemType::Prompts, "p1").unwrap();
+
+        let gloss = db.get_history_for_type(HistoryItemType::Gloss);
+        assert_eq!(gloss.len(), 2);
+        // Newest-first: the more recently saved g2 comes before g1.
+        assert_eq!(gloss[0].id, g2);
+        assert_eq!(gloss[1].id, g1);
+        assert!(gloss.iter().all(|r| r.item_type == "gloss"));
+
+        // The prompts row must not leak into the gloss list and vice versa.
+        let prompts = db.get_history_for_type(HistoryItemType::Prompts);
+        assert_eq!(prompts.len(), 1);
+        assert_eq!(prompts[0].data_json, "p1");
+    }
+
+    #[test]
+    fn delete_one_removes_only_that_row() {
+        let db = setup();
+        let id1 = db.save_new_history(HistoryItemType::Gloss, "g1").unwrap();
+        let id2 = db.save_new_history(HistoryItemType::Gloss, "g2").unwrap();
+        db.delete_history_item(id1).unwrap();
+        let rows = db.get_history_for_type(HistoryItemType::Gloss);
+        assert_eq!(rows.len(), 1);
+        assert_eq!(rows[0].id, id2);
+    }
+
+    #[test]
+    fn clear_removes_only_matching_type() {
+        let db = setup();
+        db.save_new_history(HistoryItemType::Gloss, "g1").unwrap();
+        db.save_new_history(HistoryItemType::Gloss, "g2").unwrap();
+        db.save_new_history(HistoryItemType::Prompts, "p1").unwrap();
+
+        db.clear_history(HistoryItemType::Gloss).unwrap();
+        assert!(db.get_history_for_type(HistoryItemType::Gloss).is_empty());
+        assert_eq!(db.get_history_for_type(HistoryItemType::Prompts).len(), 1);
+    }
+
+    #[test]
+    fn update_nonexistent_id_affects_zero_rows() {
+        // The bridge's save_history_session_impl relies on this 0-row signal to
+        // fall back to an INSERT (PRD §10.1 stale-row contract), so it must hold.
+        let db = setup();
+        assert_eq!(db.update_history(999_999, "{\"v\":1}").unwrap(), 0);
+    }
+
+    #[test]
+    fn save_after_clear_recreates_row() {
+        // After clear_history removes the active session's row, an update by its
+        // old id affects 0 rows; a fresh save then re-creates it (mirroring the
+        // bridge INSERT-fallback) so the data is not silently lost (PRD §10.1).
+        let db = setup();
+        let id = db.save_new_history(HistoryItemType::Prompts, "{\"v\":1}").unwrap();
+        db.clear_history(HistoryItemType::Prompts).unwrap();
+        assert_eq!(db.update_history(id, "{\"v\":2}").unwrap(), 0);
+
+        let new_id = db.save_new_history(HistoryItemType::Prompts, "{\"v\":2}").unwrap();
+        let rows = db.get_history_for_type(HistoryItemType::Prompts);
+        assert_eq!(rows.len(), 1);
+        assert_eq!(rows[0].id, new_id);
+        assert_eq!(rows[0].data_json, "{\"v\":2}");
+    }
 }
 

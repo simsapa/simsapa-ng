@@ -327,6 +327,7 @@ Frontend (Qt6/QML) ← → C++ Layer ← → Rust Backend with CXX-Qt (Database 
 - **Database Models:** `backend/src/db/schema.rs` (Diesel models)
 - **Connection Management:** `backend/src/db/` modules
 - **Query Processing:** `backend/src/query_task.rs`
+- **Gloss/Prompts history:** table `gloss_prompts_history` (migration `backend/migrations/appdata/2026-06-27-131935_create_gloss_prompts_history`, schema in `appdata_schema.rs`, model `GlossPromptsHistory`/`NewGlossPromptsHistory` + `HistoryItemType` in `appdata_models.rs`). CRUD helpers in `appdata.rs` (`get_history_for_type` / `save_new_history` / `update_history` → affected-row count for INSERT-fallback / `delete_history_item` / `clear_history`), tested by `history_tests`. Indexed on `(item_type, updated_at)`; **no per-save `ANALYZE`** (see [docs/user-data-and-sqlite-analyze.md](./docs/user-data-and-sqlite-analyze.md)).
 
 ### Search & Lookup
 - **Word Lookup:** `backend/src/lookup.rs`
@@ -358,9 +359,10 @@ Frontend (Qt6/QML) ← → C++ Layer ← → Rust Backend with CXX-Qt (Database 
   - **Language Downloads:** Downloads suttas_lang_{lang}.tar.bz2 files and imports into appdata.sqlite3
   - **Auto-initialization:** Reads download_languages.txt from app_assets_dir if present
 - **Gloss Tab:** `assets/qml/GlossTab.qml` - Pali text analysis with vocabulary and AI translations
-  - **AI Translation Interface:** `assets/qml/AssistantResponses.qml` - Tabbed interface for multiple AI model responses
+  - **AI Translation Interface:** `assets/qml/AssistantResponses.qml` - Tabbed interface for multiple AI model responses. **Height note:** the selected response renders as RichText and the `StackLayout` height is driven by a `content_height` property the inner item pushes up via `Layout.onPreferredHeightChanged` (not a one-shot `itemAt()` binding, which isn't reactive to late RichText `contentHeight` and truncated restored sessions).
   - **Response Tab Buttons:** `assets/qml/ResponseTabButton.qml` - Individual tabs with status indicators
 - **Prompts Tab:** `assets/qml/PromptsTab.qml` - AI conversation interface
+- **Session history (both tabs):** Gloss/Prompts sessions are persisted and re-openable. Shared session-lifecycle state machine + history list UI live in `GlossTab.qml` / `PromptsTab.qml`, the shared delegate `assets/qml/HistoryListItem.qml` + helper `assets/qml/HistoryUtils.qml`, the bridge functions in `bridges/src/sutta_bridge.rs` (`get_history_json_background` / `save_history_session_background` / `save_history_session_blocking` / `delete_history_item` / `clear_history` + `historyListReady`/`historySaved`/`historyChanged` signals), and the `gloss_prompts_history` table CRUD in `backend/src/db/appdata.rs`. App-close flush is wired in `SuttaSearchWindow.qml` `onClosing` + tab `Component.onDestruction`. Full design + gotchas: [docs/gloss-prompts-history.md](./docs/gloss-prompts-history.md).
 
 ### Platform Integration
 - **Mobile Detection:** `backend/src/lib.rs:427` - `is_mobile()`

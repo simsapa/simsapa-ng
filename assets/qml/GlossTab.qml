@@ -99,6 +99,7 @@ Item {
                 let translations_json = JSON.stringify(translations);
                 paragraph_model.setProperty(paragraph_idx, "translations_json", translations_json);
                 logger.debug(`💾 Saved translations_json to paragraph model`);
+                root.session_needs_saving = true;
             } else {
                 logger.error(`❌ translation_idx ${translation_idx} is out of bounds for ${translations.length} translations`);
             }
@@ -219,6 +220,20 @@ Item {
     property string current_session_id: ""
     property string current_text: ""
 
+    // Session lifecycle (see tasks/...-prd---gloss-prompts-history.md):
+    // change events only mark the session dirty; the autosave Timer flushes.
+    property bool session_needs_saving: false
+    property bool save_in_flight: false
+    // A save was requested while one was already in flight; run one more after it
+    // resolves (prevents duplicate INSERTs and keeps the latest state).
+    property bool save_again_pending: false
+    // Set true by explicit Save / New Session so the History list refreshes when
+    // the next save completes; the autosave path leaves it false (PRD req 11).
+    property bool refresh_list_on_save: false
+    // Currently selected (highlighted) history row id; -1 = none. Selection only,
+    // no load — Open loads.
+    property int selected_history_id: -1
+
     // Common words to filter out
     property var common_words: []
 
@@ -231,6 +246,67 @@ Item {
 
     // Stores recent glossing sessions
     ListModel { id: history_model }
+
+    // Debounced autosave: only writes when the session is dirty and no write is
+    // already in flight; an idle session causes zero DB access.
+    Timer {
+        id: autosave_timer
+        interval: 60000
+        repeat: true
+        running: true
+        onTriggered: {
+            if (root.session_needs_saving && !root.save_in_flight) {
+                root.save_session();
+            }
+        }
+    }
+
+    Connections {
+        target: SuttaBridge
+
+        function onHistorySaved(item_type: string, session_id: string) {
+            if (item_type !== "gloss") return;
+            root.save_in_flight = false;
+            // Empty id = save failed: keep the session dirty so the next tick
+            // retries, and don't clobber current_session_id.
+            if (session_id.length === 0) {
+                logger.error("Gloss session save failed; will retry on next tick.");
+                return;
+            }
+            root.current_session_id = session_id;
+            root.session_needs_saving = false;
+            // Refresh the list only for explicit Save / New Session writes, never
+            // on the autosave path (PRD req 11).
+            if (root.refresh_list_on_save) {
+                root.refresh_list_on_save = false;
+                root.load_history();
+            }
+            // A save was requested while this one was in flight; run it now that
+            // current_session_id is known (so it UPDATEs, not a duplicate INSERT).
+            if (root.save_again_pending) {
+                root.save_again_pending = false;
+                root.save_session();
+            }
+        }
+
+        function onHistoryChanged(item_type: string) {
+            if (item_type !== "gloss") return;
+            root.load_history();
+        }
+
+        function onHistoryListReady(item_type: string, json: string) {
+            if (item_type !== "gloss") return;
+            history_model.clear();
+            try {
+                var items = JSON.parse(json);
+                for (var i = 0; i < items.length; i++) {
+                    history_model.append(items[i]);
+                }
+            } catch (e) {
+                logger.error("Failed to parse gloss history json: " + e);
+            }
+        }
+    }
 
     // Single paragraph model with nested word models
     ListModel {
@@ -518,6 +594,7 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
         logger.info(`📊 Created ${translations.length} translation entries`);
         let translations_json = JSON.stringify(translations);
         paragraph_model.setProperty(paragraph_index, "translations_json", translations_json);
+        root.session_needs_saving = true;
     }
 
     function update_tab_selection(paragraph_idx, tab_index, model_name) {
@@ -528,60 +605,182 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
             paragraph_model.setProperty(paragraph_idx, "selected_ai_tab", tab_index);
             // Don't modify translations_json here to avoid binding loops
             // The export functions will use selected_ai_tab to determine which translation is selected
+            root.session_needs_saving = true;
         }
     }
 
     function load_history() {
-        history_model.clear()
-        var history_json = SuttaBridge.get_gloss_history_json();
-        if (history_json) {
-            try {
-                var data = JSON.parse(history_json);
-                for (var i = 0; i < data.length; i++) {
-                    history_model.append({
-                        db_id: data[i].id,
-                        modified_time: data[i].modified,
-                        gloss_data: data[i].data
-                    });
-                }
-            } catch (e) {
-                logger.error("Failed to parse history:", e);
-            }
-        }
+        // Async: results arrive via the historyListReady signal (wired up in
+        // the full History UI integration). See the gloss/prompts history PRD.
+        SuttaBridge.get_history_json_background("gloss");
     }
 
-    function save_session() {
+    // A session is "empty" (skip saving — PRD req 15) when there is no input text
+    // and no processed paragraphs.
+    function is_session_empty() {
+        return gloss_text_input.text.trim().length === 0 && paragraph_model.count === 0;
+    }
+
+    // Serialize the FULL session state needed for faithful restore (PRD req 18):
+    // input text, every paragraph's text + glossed words (with per-word selection)
+    // + AI translations + selected AI tab, and the session options and global
+    // dedup / unrecognized-word state.
+    function session_data_json(): string {
         var gloss_data = {
-            text: root.current_text,
+            text: gloss_text_input.text,
             paragraphs: [],
             no_duplicates_globally: root.no_duplicates_globally,
+            skip_common: root.skip_common,
+            global_shown_stems: root.global_shown_stems,
+            global_unrecognized_words: root.global_unrecognized_words,
+            paragraph_unrecognized_words: root.paragraph_unrecognized_words,
         };
 
         for (var i = 0; i < paragraph_model.count; i++) {
             var paragraph = paragraph_model.get(i);
             var words_data = [];
-
             if (paragraph.words_data_json) {
                 try {
                     words_data = JSON.parse(paragraph.words_data_json);
                 } catch (e) {
-                    logger.error("Failed to parse words_data_json:", e);
+                    logger.error("Failed to parse words_data_json: " + e);
+                }
+            }
+
+            var translations = [];
+            if (paragraph.translations_json) {
+                try {
+                    translations = JSON.parse(paragraph.translations_json);
+                } catch (e) {
+                    logger.error("Failed to parse translations_json: " + e);
                 }
             }
 
             gloss_data.paragraphs.push({
                 text: paragraph.text,
                 words: words_data,
+                translations: translations,
+                selected_ai_tab: paragraph.selected_ai_tab || 0,
             });
         }
 
-        if (root.current_session_id) {
-            SuttaBridge.update_gloss_session(root.current_session_id, JSON.stringify(gloss_data));
-        } else {
-            root.current_session_id = SuttaBridge.save_new_gloss_session(JSON.stringify(gloss_data));
+        return JSON.stringify(gloss_data);
+    }
+
+    // Write the current session. Normally async (off the UI thread); the close
+    // path passes `blocking = true` so the write completes before exit (PRD
+    // reqs 10a, 17). Skips empty sessions and does NOT reload the history list on
+    // the autosave path (PRD req 11).
+    function save_session(blocking) {
+        if (root.is_session_empty()) {
+            return;
         }
 
+        var data_json = root.session_data_json();
+
+        if (blocking === true) {
+            var resolved = SuttaBridge.save_history_session_blocking("gloss", root.current_session_id, data_json);
+            if (resolved && resolved.length > 0) {
+                root.current_session_id = resolved;
+            }
+            root.session_needs_saving = false;
+            root.save_in_flight = false;
+            root.save_again_pending = false;
+            return;
+        }
+
+        // Single-writer: never start a second concurrent write. A double-click on
+        // Save (or a tick landing on an in-flight write) would otherwise INSERT a
+        // duplicate row for a not-yet-persisted new session. Coalesce into one
+        // follow-up save that runs when the current write resolves.
+        if (root.save_in_flight) {
+            root.save_again_pending = true;
+            return;
+        }
+
+        // Async background save; the resolved session id arrives via the
+        // historySaved signal, which clears session_needs_saving / save_in_flight.
+        root.save_in_flight = true;
+        SuttaBridge.save_history_session_background("gloss", root.current_session_id, data_json);
+    }
+
+    // Explicit Save button / New Session flush: kick off the write now and have
+    // the completion refresh the history list (PRD reqs 11, 12).
+    function save_session_now() {
+        if (root.is_session_empty()) {
+            return;
+        }
+        root.refresh_list_on_save = true;
+        root.save_session();
+    }
+
+    // Flush any pending changes to the *current* session before switching away
+    // from it (PRD reqs 16, 17). Uses a blocking write deliberately: an async
+    // flush's historySaved would arrive after the subsequent load_session and
+    // clobber current_session_id with the flushed session's new id. The data_json
+    // is serialized synchronously before any load, so the blocking write is safe
+    // and the UI pause is brief.
+    function flush_if_needed() {
+        if (root.session_needs_saving && !root.is_session_empty()) {
+            root.save_session(true);
+        }
+    }
+
+    // Start a fresh session (PRD req 14): flush the current one, then clear input,
+    // paragraphs, and global state.
+    function new_session() {
+        root.flush_if_needed();
+        root.current_session_id = "";
+        gloss_text_input.text = "";
+        root.current_text = "";
+        paragraph_model.clear();
+        root.global_shown_stems = {};
+        root.global_unrecognized_words = [];
+        root.paragraph_unrecognized_words = {};
+        root.selected_history_id = -1;
+        root.session_needs_saving = false;
+        // The flush above was blocking (no async historySaved), so refresh the
+        // list directly so the flushed session shows.
         root.load_history();
+    }
+
+    // Open a history item: flush the current session first (PRD req 16), then load.
+    function open_history_item(item_data) {
+        root.flush_if_needed();
+        // Switch to the Gloss working area BEFORE rebuilding the model: the AI
+        // translation TextAreas render as RichText, and their contentHeight is
+        // computed wrong (truncating multi-line responses) if the delegates are
+        // created while this page is the hidden StackLayout page. Building them
+        // while visible replicates the working live condition.
+        tabBar.currentIndex = 0;
+        root.load_session("" + item_data.id, item_data.data);
+        root.selected_history_id = item_data.id;
+    }
+
+    // Entry point for "Gloss Selection" from the sutta HTML menu. If there is an
+    // existing session, confirm saving it and starting a new one with the
+    // selected text instead of overwriting the current gloss.
+    function gloss_selected_text(text) {
+        if (root.is_session_empty()) {
+            // An empty session may still carry a current_session_id (e.g. a loaded
+            // session whose text was manually cleared). Detach so the new gloss
+            // INSERTs a fresh row instead of overwriting that old session.
+            root.current_session_id = "";
+            root.selected_history_id = -1;
+            root.start_gloss_with_text(text);
+            return;
+        }
+        msg_dialog_cancel_ok.text = "Save the current gloss session and start a new one with the selected text?";
+        msg_dialog_cancel_ok.accept_fn = function() {
+            root.new_session();
+            root.start_gloss_with_text(text);
+        };
+        msg_dialog_cancel_ok.open();
+    }
+
+    function start_gloss_with_text(text) {
+        gloss_text_input.text = text;
+        root.start_background_all_glosses();
     }
 
     // Clean stem by removing disambiguating numbers
@@ -760,7 +959,7 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
         }
 
         logger.debug(`✅ Successfully processed ${results.paragraphs.length} paragraphs`);
-        root.save_session();
+        root.session_needs_saving = true;
     }
 
     // Handle results from background processing of a single paragraph
@@ -792,7 +991,7 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
         paragraph_model.setProperty(paragraph_index, "words_data_json", JSON.stringify(results.words_data));
 
         logger.debug(`✅ Successfully processed paragraph ${paragraph_index}`);
-        root.save_session();
+        root.session_needs_saving = true;
     }
 
     // Start background processing for all paragraphs
@@ -882,18 +1081,26 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
             root.current_text = session_data.text || "";
             root.no_duplicates_globally = session_data.no_duplicates_globally !== undefined ?
                                          session_data.no_duplicates_globally : true;
+            root.skip_common = session_data.skip_common !== undefined ?
+                               session_data.skip_common : true;
+
+            // Restore the global dedup / unrecognized-word state (PRD req 18).
+            root.global_shown_stems = session_data.global_shown_stems || {};
+            root.global_unrecognized_words = session_data.global_unrecognized_words || [];
+            root.paragraph_unrecognized_words = session_data.paragraph_unrecognized_words || {};
 
             gloss_text_input.text = root.current_text;
 
-            // Load paragraphs
+            // Load paragraphs with their full state (words, AI translations,
+            // selected AI tab).
             if (session_data.paragraphs) {
                 for (var i = 0; i < session_data.paragraphs.length; i++) {
                     var para_data = session_data.paragraphs[i];
                     var model_item = {
                         text: para_data.text || "",
                         words_data_json: JSON.stringify(para_data.words || []),
-                        translations_json: "[]",
-                        selected_ai_tab: 0
+                        translations_json: JSON.stringify(para_data.translations || []),
+                        selected_ai_tab: para_data.selected_ai_tab || 0
                     };
 
                     paragraph_model.append(model_item);
@@ -901,8 +1108,10 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
             }
 
             root.current_session_id = db_id;
+            // A freshly loaded session has no unsaved changes.
+            root.session_needs_saving = false;
         } catch (e) {
-            logger.error("Failed to load session:", e);
+            logger.error("Failed to load session: " + e);
         }
     }
 
@@ -925,12 +1134,12 @@ So vivicceva kāmehi vivicca akusalehi dhammehi savitakkaṁ savicāraṁ viveka
         // Update model with new JSON
         paragraph_model.setProperty(paragraph_idx, "words_data_json", JSON.stringify(words_data));
 
-        root.save_session();
+        root.session_needs_saving = true;
     }
 
     function update_paragraph_text(index, new_text) {
         paragraph_model.setProperty(index, "text", new_text);
-        root.save_session();
+        root.session_needs_saving = true;
     }
 
     function summary_strip_html(text: string): string {
@@ -1378,6 +1587,14 @@ ${main_text}
         anchors.left: parent.left
         anchors.right: parent.right
 
+        // Refresh the history list when the History sub-tab becomes visible
+        // (PRD req 11 — the list is not refreshed on the autosave path).
+        onCurrentIndexChanged: {
+            if (tabBar.currentIndex === 1) {
+                root.load_history();
+            }
+        }
+
         TabButton {
             text: "Gloss"
         }
@@ -1408,6 +1625,41 @@ ${main_text}
             ColumnLayout {
                 width: parent.width
                 spacing: 20
+
+                // Session toolbar: New Session, Save, and the save-state indicator.
+                RowLayout {
+                    Layout.fillWidth: true
+                    Layout.leftMargin: 10
+                    Layout.rightMargin: 10
+                    Layout.topMargin: 10
+                    spacing: 10
+
+                    Button {
+                        id: new_session_btn
+                        text: "New Session"
+                        onClicked: {
+                            msg_dialog_cancel_ok.text = "Start a new session? The current session will be saved to history.";
+                            msg_dialog_cancel_ok.accept_fn = function() { root.new_session(); };
+                            msg_dialog_cancel_ok.open();
+                        }
+                    }
+
+                    Button {
+                        id: save_session_btn
+                        text: "Save"
+                        enabled: root.session_needs_saving
+                        onClicked: root.save_session_now()
+                    }
+
+                    Label {
+                        id: save_state_label
+                        text: root.session_needs_saving ? "Unsaved changes" : "Saved"
+                        color: root.session_needs_saving ? "#E07B39" : root.text_color
+                        font.pointSize: 10
+                    }
+
+                    Item { Layout.fillWidth: true }
+                }
 
                 GroupBox {
                     id: main_gloss_input_group
@@ -1440,6 +1692,10 @@ ${main_text}
                                 background: Rectangle {
                                     color: "transparent"
                                 }
+                                // A change in the main input is a savable event.
+                                // Programmatic loads (load_session / new_session)
+                                // reset the flag to false afterwards.
+                                onTextChanged: root.session_needs_saving = true
                             }
                         }
 
@@ -1536,14 +1792,77 @@ ${main_text}
         }
 
         // History Tab
-        ScrollView {
-            Label { text: "History" }
-            // ListView {
-            //     anchors.fill: parent
-            //     model: history_model
-            //     spacing: 10
-            //     delegate: historyItemDelegate
-            // }
+        ColumnLayout {
+            spacing: 10
+
+            RowLayout {
+                Layout.fillWidth: true
+                Layout.margins: 10
+                spacing: 10
+
+                Label {
+                    text: "Saved sessions"
+                    font.pointSize: 11
+                    font.bold: true
+                }
+
+                Item { Layout.fillWidth: true }
+
+                Button {
+                    text: "Clear"
+                    enabled: history_model.count > 0
+                    onClicked: {
+                        msg_dialog_cancel_ok.text = "Clear all gloss history? This cannot be undone.";
+                        msg_dialog_cancel_ok.accept_fn = function() {
+                            SuttaBridge.clear_history("gloss");
+                            root.selected_history_id = -1;
+                            // The active session's row is gone; detach so the next
+                            // save INSERTs a fresh row instead of a no-op UPDATE.
+                            root.current_session_id = "";
+                        };
+                        msg_dialog_cancel_ok.open();
+                    }
+                }
+            }
+
+            ListView {
+                id: history_list_view
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                Layout.leftMargin: 10
+                Layout.rightMargin: 10
+                Layout.bottomMargin: 10
+                clip: true
+                spacing: 4
+                model: history_model
+
+                ScrollBar.vertical: ScrollBar {}
+
+                delegate: HistoryListItem {
+                    width: history_list_view.width
+                    required property var model
+                    item_data: model
+                    item_type: "gloss"
+                    is_dark: root.is_dark
+                    is_selected: root.selected_history_id === model.id
+                    onSelect_clicked: function(item_id) { root.selected_history_id = item_id; }
+                    onOpen_clicked: function(item_data) { root.open_history_item(item_data); }
+                    onDelete_clicked: function(item_id) {
+                        if (root.selected_history_id === item_id) root.selected_history_id = -1;
+                        // If the deleted row is the active session, detach so the
+                        // next save INSERTs a fresh row instead of a no-op UPDATE.
+                        if (root.current_session_id === ("" + item_id)) root.current_session_id = "";
+                        SuttaBridge.delete_history_item("gloss", item_id);
+                    }
+                }
+
+                Label {
+                    anchors.centerIn: parent
+                    visible: history_model.count === 0
+                    text: "No saved sessions yet."
+                    opacity: 0.6
+                }
+            }
         }
     }
 

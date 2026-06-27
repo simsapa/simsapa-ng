@@ -84,6 +84,17 @@ Notes:
 - Small writes: bookmarks, app settings, the `chanting_recordings` waveform
   cache, etc. These don't move table cardinalities far enough to change a
   query plan.
+- **Gloss/Prompts history (`gloss_prompts_history`).** This table grows at
+  runtime (one row per saved Gloss/Prompts session, written by the 60 s autosave
+  / Save button / app-close flush — see
+  [gloss-prompts-history.md](./gloss-prompts-history.md)), but the CRUD helpers
+  in `appdata.rs` deliberately do **not** call `ANALYZE`. The only query is a
+  single-table equality + order (`WHERE item_type = ? ORDER BY updated_at DESC`)
+  fully served by the `(item_type, updated_at)` index, which SQLite plans
+  correctly without stats — unlike the catastrophic case above, which was a
+  multi-table join. `DatabaseHandle::analyze` also runs a full-DB `ANALYZE` over
+  *all* appdata tables, so calling it on every 60 s save would be wasteful. (The
+  decision is also recorded as a code comment above the CRUD helpers.)
 - Schema migrations / startup schema upgrades (`run_dictionaries_migrations`,
   `upgrade_appdata_schema`): we don't `ANALYZE` after these because we ship a
   new shipped DB on any change large enough to shift selectivity — migrations

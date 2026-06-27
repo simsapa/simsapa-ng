@@ -17,6 +17,12 @@ ApplicationWindow {
     color: palette.window
 
     onClosing: function(close) {
+        // Flush any unsaved Gloss/Prompts session before the process exits (PRD
+        // req 17). flush_if_needed() is a blocking, idempotent no-op when clean.
+        // Run on BOTH branches: on mobile the close is cancelled (no guaranteed
+        // real-exit hook), so this is a backstop and a redundant save is harmless.
+        gloss_tab.flush_if_needed();
+        prompts_tab.flush_if_needed();
         if (root.is_mobile) {
             close.accepted = false;
             show_sidebar_btn.checked = false;
@@ -737,8 +743,9 @@ ApplicationWindow {
     function gloss_text(query_text: string) {
         show_sidebar_btn.checked = true;
         rightside_tabs.setCurrentIndex(2); // gloss tab
-        gloss_tab.gloss_text_input.text = query_text;
-        gloss_tab.start_background_all_glosses();
+        // If a gloss session is already in progress, confirm before replacing it
+        // (saves the current session and starts a new one with the selected text).
+        gloss_tab.gloss_selected_text(query_text);
     }
 
     function new_prompt(prompt: string) {
@@ -3563,6 +3570,9 @@ ${query_text}`;
                                 Layout.fillWidth: true
                                 Layout.fillHeight: true
                                 handle_open_dict_tab_fn: root.open_dict_tab
+                                // Backstop flush for teardown paths that bypass
+                                // onClosing (e.g. mobile) — PRD req 17.
+                                Component.onDestruction: gloss_tab.flush_if_needed()
                             }
 
                             Connections {
@@ -3579,6 +3589,9 @@ ${query_text}`;
                                 ai_models_auto_retry: models_dialog.auto_retry.checked
                                 Layout.fillWidth: true
                                 Layout.fillHeight: true
+                                // Backstop flush for teardown paths that bypass
+                                // onClosing (e.g. mobile) — PRD req 17.
+                                Component.onDestruction: prompts_tab.flush_if_needed()
                             }
 
                             TocTab {
