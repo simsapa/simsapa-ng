@@ -737,8 +737,9 @@ ApplicationWindow {
     function gloss_text(query_text: string) {
         show_sidebar_btn.checked = true;
         rightside_tabs.setCurrentIndex(2); // gloss tab
-        gloss_tab.gloss_text_input.text = query_text;
-        gloss_tab.start_background_all_glosses();
+        // If a gloss session is already in progress, confirm before replacing it
+        // (saves the current session and starts a new one with the selected text).
+        gloss_tab.gloss_selected_text(query_text);
     }
 
     function new_prompt(prompt: string) {

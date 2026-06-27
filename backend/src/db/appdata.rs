@@ -1933,7 +1933,10 @@ impl AppdataDbHandle {
         })
     }
 
-    pub fn update_history(&self, id_param: i32, data_json_param: &str) -> Result<()> {
+    /// Updates an existing history row, returning the number of rows affected
+    /// (0 if `id_param` no longer exists, e.g. it was deleted/cleared). Callers
+    /// use the count to fall back to an INSERT rather than silently losing data.
+    pub fn update_history(&self, id_param: i32, data_json_param: &str) -> Result<usize> {
         use crate::db::appdata_schema::gloss_prompts_history::dsl::*;
 
         let now = chrono::Utc::now().naive_utc();
@@ -1944,7 +1947,6 @@ impl AppdataDbHandle {
                     updated_at.eq(Some(now)),
                 ))
                 .execute(db_conn)
-                .map(|_| ())
         })
     }
 

@@ -582,7 +582,17 @@ fn save_history_session_impl(item_type: HistoryItemType, session_id: &str, data_
     } else {
         match session_id.parse::<i32>() {
             Ok(id) => match app_data.dbm.appdata.update_history(id, data_json) {
-                Ok(()) => Some(id.to_string()),
+                // Row still exists: updated in place.
+                Ok(rows) if rows > 0 => Some(id.to_string()),
+                // Row was deleted/cleared while still the current session: INSERT
+                // a fresh row instead of silently losing the data.
+                Ok(_) => match app_data.dbm.appdata.save_new_history(item_type, data_json) {
+                    Ok(new_id) => Some(new_id.to_string()),
+                    Err(e) => {
+                        error(&format!("save_history_session_impl reinsert: {}", e));
+                        None
+                    }
+                },
                 Err(e) => {
                     error(&format!("save_history_session_impl update: {}", e));
                     None

@@ -169,7 +169,7 @@ precedent).
       `get_gloss_history_json` stub (`:425`).
 - [x] 2.9 Confirm the project builds (`make build -B`).
 
-### 3.0 Shared QML: list-item component + helper (PRD reqs 21–23, 25, 26)
+### 3.0 Shared QML: list-item component + helper (PRD reqs 21–23, 25, 26) ✅
 
 **Spec:** `HistoryListItem.qml` mirrors `BookmarkListItem.qml` layout but
 simplified — no drag/checkbox/badge. Shows a single-line, ~80-char-truncated
@@ -180,21 +180,21 @@ label derived from the session's input text; an **Open** button (text) and a
 background `Rectangle`.
 **Depends on:** nothing in this feature (pure QML).
 
-- [ ] 3.1 Create `assets/qml/HistoryListItem.qml` with `required property var
+- [x] 3.1 Create `assets/qml/HistoryListItem.qml` with `required property var
       item_data`, the truncated single-line label, Open/Delete buttons, and the
       row-select MouseArea + selection highlight; use `Logger { id: logger }` (no
       `console`).
-- [ ] 3.2 Create the shared single-line/truncate helper (e.g.
+- [x] 3.2 Create the shared single-line/truncate helper (e.g.
       `assets/qml/HistoryUtils.qml` exposing
       `single_line_truncate(text, max_len)` that collapses
       newlines/whitespace runs to single spaces and truncates to ~80 chars with
       an ellipsis) so both tabs and the delegate reuse one implementation.
-- [ ] 3.3 Register `HistoryListItem.qml` (and the helper qml, if a Component) in
+- [x] 3.3 Register `HistoryListItem.qml` (and the helper qml, if a Component) in
       the `qml_files` list in `bridges/build.rs` (near `BookmarkListItem.qml`,
       `:74`).
-- [ ] 3.4 Confirm the project builds (`make build -B`).
+- [x] 3.4 Confirm the project builds (`make build -B`).
 
-### 4.0 GlossTab integration (PRD reqs 7–16, 18-gloss, 19–24)
+### 4.0 GlossTab integration (PRD reqs 7–16, 18-gloss, 19–24) ✅
 
 **Spec — session lifecycle:** add `property bool session_needs_saving: false`;
 change events set it true (do **not** save synchronously); a `Timer`
@@ -210,35 +210,35 @@ and the global dedup/unrecognized state. **History UI:** real `ListView` of
 Open / Delete / Clear (not autosave).
 **Depends on:** tasks 2.0 (bridge) and 3.0 (shared QML).
 
-- [ ] 4.1 Add `session_needs_saving` and a `selected_history_id` property; add the
+- [x] 4.1 Add `session_needs_saving` and a `selected_history_id` property; add the
       60 s autosave `Timer` that calls the async save when dirty (guard against
       overlapping in-flight writes) and a `Connections` to `historySaved`
       (filter `item_type === "gloss"`) that sets `current_session_id` and clears
       the flag.
-- [ ] 4.2 Refactor the eager-save change points to mark-dirty only:
+- [x] 4.2 Refactor the eager-save change points to mark-dirty only:
       `update_paragraph_text` (`:931`), `update_word_selection` (`:909`), and the
       post-gloss handlers (`:763`, `:795`) set `session_needs_saving = true`
       instead of calling `save_session()`.
-- [ ] 4.3 Rework `save_session()` to (a) build the **full** `gloss_data`
+- [x] 4.3 Rework `save_session()` to (a) build the **full** `gloss_data`
       including per-paragraph `translations_json` + `selected_ai_tab` + options +
       global state, (b) call the async (or, on close, blocking) bridge save, and
       (c) **not** call `load_history()` (remove `:584`). Skip empty sessions
       (req 15).
-- [ ] 4.4 Rework `load_session()` to restore the full set — stop hard-coding
+- [x] 4.4 Rework `load_session()` to restore the full set — stop hard-coding
       `translations_json: "[]"` (`:895`); repopulate translations, selected AI
       tab, options, and global state so the UI matches the saved state.
-- [ ] 4.5 Add a `new_session()` function (flush-if-dirty, reset
+- [x] 4.5 Add a `new_session()` function (flush-if-dirty, reset
       `current_session_id`, clear input/`paragraph_model`/global state, clear
       flag) and a **New Session** button with a confirmation dialog (req 14).
-- [ ] 4.6 Add a **Save** button (kicks off the async save immediately; disabled
+- [x] 4.6 Add a **Save** button (kicks off the async save immediately; disabled
       when `!session_needs_saving`) and a save-state indicator Label bound to
       `session_needs_saving`, placed in a top toolbar row.
-- [ ] 4.7 Replace the History sub-tab placeholder (`:1538`) with a real
+- [x] 4.7 Replace the History sub-tab placeholder (`:1538`) with a real
       `ListView` (`model: history_model`, `delegate: HistoryListItem`) and a
       **Clear** button (with confirm dialog) above it; wire `select_clicked` →
       set `selected_history_id`, `open_clicked` → flush-then-`load_session`,
       `delete_clicked` → bridge delete.
-- [ ] 4.8 Update `load_history()` to use the async list bridge: trigger
+- [x] 4.8 Update `load_history()` to use the async list bridge: trigger
       `get_history_json_background("gloss")` and populate `history_model` from the
       `historyListReady` signal (filter `item_type === "gloss"`); refresh after
       Save/New Session/Open/Delete/Clear (via `historyChanged`), not on autosave.
@@ -246,7 +246,7 @@ Open / Delete / Clear (not autosave).
       `onCurrentIndexChanged` today (`:1378`), so add one (or the History page's
       `onVisibleChanged`) to reload the list when the History sub-tab becomes
       visible — otherwise it only updates after a write and looks stale.
-- [ ] 4.9 Confirm the project builds (`make build -B`) and the Gloss flow works
+- [x] 4.9 Confirm the project builds (`make build -B`) and the Gloss flow works
       (manual check by user if needed per repo GUI-testing guidance).
 
 ### 5.0 PromptsTab integration (PRD reqs 7–16, 18-prompts, 19–24)
