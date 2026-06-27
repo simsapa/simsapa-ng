@@ -249,7 +249,7 @@ Open / Delete / Clear (not autosave).
 - [x] 4.9 Confirm the project builds (`make build -B`) and the Gloss flow works
       (manual check by user if needed per repo GUI-testing guidance).
 
-### 5.0 PromptsTab integration (PRD reqs 7–16, 18-prompts, 19–24)
+### 5.0 PromptsTab integration (PRD reqs 7–16, 18-prompts, 19–24) ✅
 
 **Spec:** the same lifecycle + history UI as GlossTab, parameterised with
 `item_type = "prompts"`. **Serialize:** `save_session()` builds
@@ -283,13 +283,13 @@ The cleanest path is to copy GlossTab's `save_session` / `save_session_now` /
 `flush_if_needed` / `onHistorySaved` shape verbatim and swap the serialize /
 restore bodies + `"gloss"` → `"prompts"`.
 
-- [ ] 5.1 Add `current_session_id`, `session_needs_saving`, `save_in_flight`,
+- [x] 5.1 Add `current_session_id`, `session_needs_saving`, `save_in_flight`,
       `save_again_pending`, `refresh_list_on_save`, `selected_history_id`,
       `ListModel { id: history_model }`, the 60 s autosave `Timer` (tick gated on
       `session_needs_saving && !save_in_flight`), and a `Connections` to
       `historySaved`/`historyChanged`/`historyListReady` filtered on
       `item_type === "prompts"` (with the empty-id failure handling per PRD §10.2).
-- [ ] 5.2 Implement `save_session(blocking)` (single-writer guard + coalesce per
+- [x] 5.2 Implement `save_session(blocking)` (single-writer guard + coalesce per
       PRD §10.3; `blocking` close/flush variant per §10.4; `is_session_empty()`
       skip; no list reload on autosave), `save_session_now()` (sets
       `refresh_list_on_save`), `flush_if_needed()` (blocking), and `load_session()`
@@ -301,11 +301,11 @@ restore bodies + `"gloss"` → `"prompts"`.
       not persisted, any non-terminal (`pending`) response must be dropped or
       marked interrupted at save time so a restored conversation has no "zombie
       spinner" (PRD req 18).
-- [ ] 5.3 Mark dirty at the conversation change points (message append, responses
+- [x] 5.3 Mark dirty at the conversation change points (message append, responses
       received, message edit, regenerate/branch) instead of any direct save —
       including edits to the user/system message text fields (PRD §10.6, the
       Prompts analogue of GlossTab's main-input `onTextChanged`).
-- [ ] 5.4 Add a `new_session()` (flush-if-dirty via the **blocking** flush, clear
+- [x] 5.4 Add a `new_session()` (flush-if-dirty via the **blocking** flush, clear
       conversation back to the system + empty user message, reset
       id/flag/`selected_history_id`, then `load_history()`) and a **New Session**
       button with a confirmation dialog. **External entry (PRD §10.7):** route
@@ -313,21 +313,21 @@ restore bodies + `"gloss"` → `"prompts"`.
       confirm/new-session path when a non-empty conversation is in progress, and
       detach `current_session_id` when starting fresh from an empty-but-loaded
       session, so it never overwrites the previously opened session's row.
-- [ ] 5.5 Add the **Save** button + save-state indicator (bound to
+- [x] 5.5 Add the **Save** button + save-state indicator (bound to
       `session_needs_saving`) in a top toolbar row, matching GlossTab.
-- [ ] 5.6 Replace the History sub-tab placeholder (`:617`) with the real
+- [x] 5.6 Replace the History sub-tab placeholder (`:617`) with the real
       `ListView` of `HistoryListItem` + **Clear** button (confirm dialog); wire
       select / open (flush-then-load) / delete. **Reset `current_session_id = ""`
       on Clear, and on Delete of the active session** (PRD §10.1).
-- [ ] 5.7 Implement `load_history()` via `get_history_json_background("prompts")`
+- [x] 5.7 Implement `load_history()` via `get_history_json_background("prompts")`
       + `historyListReady` (filter `item_type === "prompts"`); refresh after
       Save/New Session/Open/Delete/Clear. **Add the activation trigger:** the
       `tabBar` has no `onCurrentIndexChanged` today (`:540`), so add one (or the
       History page's `onVisibleChanged`) to reload when the History sub-tab
       becomes visible.
-- [ ] 5.8 Confirm the project builds (`make build -B`).
+- [x] 5.8 Confirm the project builds (`make build -B`).
 
-### 6.0 App-close flush (PRD req 17)
+### 6.0 App-close flush (PRD req 17) ✅
 
 **Spec:** on app/tab close, for each tab with `session_needs_saving === true` and
 a non-empty session, perform a **blocking** save (`save_history_session_blocking`)
@@ -337,20 +337,20 @@ so it completes before the process exits. Hook into the existing
 **Depends on:** tasks 4.0, 5.0 (tabs expose a flush function) and 2.5 (blocking
 bridge fn).
 
-- [ ] 6.1 Ensure `flush_if_needed()` exists on both tabs: when
+- [x] 6.1 Ensure `flush_if_needed()` exists on both tabs: when
       `session_needs_saving` and the session is non-empty, it calls
       `save_session(true)` (the **blocking** variant, which clears the flag and
       `save_again_pending`). It must be idempotent (safe to call twice / when
       already clean). **Already implemented on GlossTab in task 4.x**; PromptsTab
       gets it in task 5.2. Do not duplicate the blocking bridge call at the call
       sites — go through `flush_if_needed()` (PRD §10.4).
-- [ ] 6.2 Call `gloss_tab.flush_if_needed()` and `prompts_tab.flush_if_needed()`
+- [x] 6.2 Call `gloss_tab.flush_if_needed()` and `prompts_tab.flush_if_needed()`
       from `SuttaSearchWindow.qml` `onClosing` (`:19`). **Mobile caveat:** the
       handler sets `close.accepted = false` on mobile (`:20-23`), so there is no
       guaranteed real-exit hook — run the flush on **both** branches (a redundant
       save is harmless) and add `Component.onDestruction` flushes on `gloss_tab`
       and `prompts_tab` as a backstop.
-- [ ] 6.3 Confirm the project builds and that quitting right after an edit
+- [x] 6.3 Confirm the project builds and that quitting right after an edit
       preserves the session (manual verification).
 
 ### 7.0 Tests, verification, and documentation
