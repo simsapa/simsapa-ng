@@ -531,10 +531,14 @@ Item {
     // Open a history item: flush the current session first (PRD req 16), then load.
     function open_history_item(item_data) {
         root.flush_if_needed();
+        // Switch to the Prompt working area BEFORE rebuilding the model: the
+        // response TextAreas render as RichText, and their contentHeight is
+        // computed wrong (truncating multi-line responses) if the delegates are
+        // created while this page is the hidden StackLayout page. Building them
+        // while visible replicates the working live-send condition.
+        tab_bar.currentIndex = 0;
         root.load_session("" + item_data.id, item_data.data);
         root.selected_history_id = item_data.id;
-        // Switch back to the Prompt working area.
-        tab_bar.currentIndex = 0;
     }
 
     // Rebuild messages_model from saved data_json. Sets session_needs_saving=false
