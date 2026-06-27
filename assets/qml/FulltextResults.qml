@@ -62,6 +62,12 @@ ColumnLayout {
     // saying "No results found.". See docs/search-snippet-highlight-pipeline.md.
     property string snippet_exclude_terms: ""
     property bool is_loading: false
+    // Whether the app database/searcher have finished loading. Passed down from
+    // the parent window. While loading we show the app logo + "Loading..."
+    // (on mobile this panel is the main view the user waits on) instead of the
+    // generic "No results found." empty state. Defaults true so QML preview /
+    // desktop tooling are unaffected.
+    property bool db_ready: true
     property alias currentIndex: fulltext_list.currentIndex
     property alias currentItem: fulltext_list.currentItem
 
@@ -254,12 +260,52 @@ ColumnLayout {
         text: (root.total_hits > 0 && root.snippet_exclude_terms.trim().length > 0)
             ? "Results from this page were excluded by the filter: " + root.snippet_exclude_terms.trim()
             : "No results found."
-        visible: !root.is_loading && results_model.count === 0
+        // Don't show "No results found." while the DB is still loading — the
+        // loading_state overlay shows the logo + "Loading..." instead.
+        visible: root.db_ready && !root.is_loading && results_model.count === 0
         horizontalAlignment: Text.AlignHCenter
         font.italic: true
         color: "grey"
         wrapMode: Text.WordWrap
         Layout.fillWidth: true
+    }
+
+    // While the database is loading, show the app logo and a "Loading..."
+    // message instead of the empty "No results found." state. On mobile this
+    // panel is the main view the user is waiting on while the app loads.
+    // This Item fills the space below the controls header; its content is
+    // centered within that space and then lifted by half the header height
+    // (controls_row + loading bar) so it sits centered over the whole panel.
+    Item {
+        id: loading_state
+        visible: !root.db_ready
+        Layout.fillWidth: true
+        Layout.fillHeight: true
+
+        ColumnLayout {
+            spacing: 10
+            anchors.centerIn: parent
+            anchors.verticalCenterOffset: (-(controls_row.height + fulltext_loading_bar.height) / 2) - 10
+
+            Image {
+                source: "icons/appicons/simsapa.png"
+                Layout.preferredWidth: 100
+                Layout.preferredHeight: 100
+                Layout.alignment: Qt.AlignHCenter
+            }
+
+            Text {
+                text: "Loading..."
+                font.pointSize: root.font_point_size
+                // Use the system palette rather than root.is_dark: while loading,
+                // the app theme hasn't been applied yet (is_dark defaults false),
+                // but the window paints with the system palette — so honor that
+                // to stay legible against a dark system UI.
+                color: palette.text
+                horizontalAlignment: Text.AlignHCenter
+                Layout.alignment: Qt.AlignHCenter
+            }
+        }
     }
 
     ListView {

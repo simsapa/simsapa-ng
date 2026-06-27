@@ -19,6 +19,7 @@ Frame {
     required property bool is_tall
     required property bool db_loaded
     required property bool searcher_ready
+    readonly property bool db_ready: root.db_loaded && root.searcher_ready
     required property var handle_query_fn
     required property Timer search_timer
     required property DrawerMenu mobile_menu
@@ -135,7 +136,7 @@ Frame {
             // === Search Input ====
             TextField {
                 id: search_input
-                enabled: root.db_loaded && root.searcher_ready
+                enabled: root.db_ready
                 Layout.fillWidth: true
                 Layout.preferredWidth: root.is_wide ? 500 : 250
                 Layout.preferredHeight: root.icon_size
@@ -158,7 +159,7 @@ Frame {
                 EnterKey.type: Qt.EnterKeySearch
                 font.pointSize: root.is_mobile ? 14 : 12
                 placeholderText: {
-                    if (!root.db_loaded || !root.searcher_ready) return "Loading...";
+                    if (!root.db_ready) return "Loading...";
                     if (root.search_area === "Dictionary") return "Search in dictionary";
                     if (root.search_area === "Library") return "Search in library";
                     return "Search in suttas";

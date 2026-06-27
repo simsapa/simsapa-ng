@@ -74,7 +74,10 @@ ApplicationWindow {
     property bool is_loading: false
     property bool has_query_error: false
 
-    property bool webview_visible: root.is_desktop || (!mobile_menu.visible && !about_dialog.visible && !models_dialog.visible && !anki_export_dialog.visible && !gloss_tab.commonWordsDialog.visible && !tab_list_dialog.visible && !database_validation_dialog.visible && !app_settings_window.visible && !info_dialog.visible && !related_sutta_not_found_dialog.visible)
+    // Gate the webview on the DB being ready so that the "Loading..." icon and
+    // message are shown unobscured while the database is loading.
+    property bool db_ready: SuttaBridge.db_loaded && SuttaBridge.searcher_ready
+    property bool webview_visible: root.db_ready && (root.is_desktop || (!mobile_menu.visible && !about_dialog.visible && !models_dialog.visible && !anki_export_dialog.visible && !gloss_tab.commonWordsDialog.visible && !tab_list_dialog.visible && !database_validation_dialog.visible && !app_settings_window.visible && !info_dialog.visible && !related_sutta_not_found_dialog.visible))
 
     // Collapsible advanced sub-sections
     property bool is_filters_collapsed: false
@@ -3345,6 +3348,30 @@ ${query_text}`;
                                         }
                                     }
                                 }
+
+                                // While the database is loading, hide the (mobile)
+                                // webview via root.webview_visible and instead show
+                                // the app icon and a "Loading..." message. Both
+                                // disappear once the DB and searcher are ready.
+                                ColumnLayout {
+                                    anchors.centerIn: parent
+                                    spacing: 10
+                                    visible: !root.db_ready
+
+                                    Image {
+                                        source: "icons/appicons/simsapa.png"
+                                        Layout.preferredWidth: 100
+                                        Layout.preferredHeight: 100
+                                        Layout.alignment: Qt.AlignCenter
+                                    }
+
+                                    Text {
+                                        text: "Loading..."
+                                        font.pointSize: root.is_mobile ? 14 : 12
+                                        color: palette.text
+                                        Layout.alignment: Qt.AlignCenter
+                                    }
+                                }
                             }
 
                             Item {
@@ -3489,6 +3516,7 @@ ${query_text}`;
                             FulltextResults {
                                 id: fulltext_results
                                 is_loading: root.is_loading
+                                db_ready: root.db_ready
                                 is_dark: root.is_dark
                                 render_use_flat_results_background: root.render_use_flat_results_background
                                 render_disable_results_clip: root.render_disable_results_clip
