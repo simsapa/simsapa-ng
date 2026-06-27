@@ -57,7 +57,13 @@ its boundary.
 - `backend/src/db/appdata.rs` (tests) — Rust unit/integration tests for the new
   CRUD helpers against the real appdata DB.
 - `PROJECT_MAP.md`, `docs/user-data-and-sqlite-analyze.md`,
-  `docs/startup-sequence-and-caches.md` — Documentation updates.
+  `docs/gloss-prompts-history.md` (new feature doc), `AGENTS.md` (notable-docs
+  link) — Documentation updates.
+- `assets/qml/AssistantResponses.qml` — Height fix discovered during PromptsTab
+  verification: the selected RichText response was truncated on restore because
+  the `StackLayout` height used a one-shot `itemAt()` binding that isn't reactive
+  to late `contentHeight`; now driven by a `content_height` property pushed up via
+  `Layout.onPreferredHeightChanged` (shared component, also fixes GlossTab).
 
 ### Notes
 
@@ -353,9 +359,9 @@ bridge fn).
 - [x] 6.3 Confirm the project builds and that quitting right after an edit
       preserves the session (manual verification).
 
-### 7.0 Tests, verification, and documentation
+### 7.0 Tests, verification, and documentation ✅
 
-- [ ] 7.1 Add Rust tests in `backend/src/db/appdata.rs` (or the crate's test
+- [x] 7.1 Add Rust tests in `backend/src/db/appdata.rs` (or the crate's test
       module) for the CRUD helpers against the real appdata DB: save-new returns
       id, update changes `data_json`/`updated_at`, list is newest-first and
       `item_type`-scoped, delete-one and clear-all, and that `"gloss"` vs
@@ -363,12 +369,15 @@ bridge fn).
       (PRD §10.1):** `update_history` returns `0` for a deleted/non-existent id
       (so the bridge's INSERT-fallback triggers), and a save against an id removed
       by `clear_history` re-creates a row rather than vanishing.
-- [ ] 7.2 Run `cd backend && cargo test` and confirm the new tests pass (ignore
-      unrelated pre-existing failures per repo guidance).
-- [ ] 7.3 Run `make build -B` for a clean full build.
-- [ ] 7.4 Update `PROJECT_MAP.md` with the new table, bridge functions, shared
+      *(Implemented as `history_tests` against a throwaway temp DB built from
+      `APPDATA_MIGRATIONS` — writing/deleting against the shipped appdata DB would
+      be destructive; the temp DB exercises the identical CRUD SQL.)*
+- [x] 7.2 Run `cd backend && cargo test` and confirm the new tests pass (ignore
+      unrelated pre-existing failures per repo guidance). *(7 history tests pass.)*
+- [x] 7.3 Run `make build -B` for a clean full build.
+- [x] 7.4 Update `PROJECT_MAP.md` with the new table, bridge functions, shared
       QML component, and the session-lifecycle additions to both tabs.
-- [ ] 7.5 Update `docs/user-data-and-sqlite-analyze.md` (new runtime-growing
+- [x] 7.5 Update `docs/user-data-and-sqlite-analyze.md` (new runtime-growing
       table + the **no per-save `ANALYZE`** decision from task 1.7) and note the
       history feature in `docs/startup-sequence-and-caches.md` if relevant. **Add a
       short feature doc** (e.g. `docs/gloss-prompts-history.md`) capturing the
