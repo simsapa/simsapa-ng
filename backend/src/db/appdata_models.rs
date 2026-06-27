@@ -538,6 +538,58 @@ fn default_true() -> bool {
     true
 }
 
+// Gloss / Prompts history models
+
+/// The kind of history record. Stored in the DB as a string (`"gloss"` /
+/// `"prompts"`) but kept as an enum in Rust so call sites can't pass an
+/// arbitrary string.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum HistoryItemType {
+    Gloss,
+    Prompts,
+}
+
+impl HistoryItemType {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            HistoryItemType::Gloss => "gloss",
+            HistoryItemType::Prompts => "prompts",
+        }
+    }
+}
+
+impl std::str::FromStr for HistoryItemType {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "gloss" => Ok(HistoryItemType::Gloss),
+            "prompts" => Ok(HistoryItemType::Prompts),
+            other => Err(anyhow::anyhow!("invalid history item_type: {other:?}")),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Queryable, Selectable, Identifiable, PartialEq, Serialize, Deserialize)]
+#[diesel(table_name = gloss_prompts_history)]
+#[diesel(check_for_backend(diesel::sqlite::Sqlite))]
+pub struct GlossPromptsHistory {
+    pub id: i32,
+    pub item_type: String,
+    pub data_json: String,
+    pub created_at: Option<chrono::NaiveDateTime>,
+    pub updated_at: Option<chrono::NaiveDateTime>,
+}
+
+#[derive(Insertable)]
+#[diesel(table_name = gloss_prompts_history)]
+pub struct NewGlossPromptsHistory<'a> {
+    pub item_type: &'a str,
+    pub data_json: &'a str,
+    pub created_at: Option<chrono::NaiveDateTime>,
+    pub updated_at: Option<chrono::NaiveDateTime>,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BookmarkItemUpdate {
     pub item_uid: Option<String>,

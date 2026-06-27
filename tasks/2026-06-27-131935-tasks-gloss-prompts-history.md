@@ -80,7 +80,7 @@ after each sub-task (not just each parent task).
 
 ## Tasks
 
-### 1.0 Backend DB layer (PRD reqs 1–4, 6)
+### 1.0 Backend DB layer (PRD reqs 1–4, 6) ✅
 
 **Spec:** table `gloss_prompts_history` with `id` INTEGER PK, `item_type` VARCHAR
 NOT NULL (`"gloss"`|`"prompts"`), `data_json` TEXT NOT NULL, `created_at`
@@ -90,32 +90,32 @@ retention cap. `data_json` is opaque text to the backend.
 **Depends on:** existing appdata DB infra (`do_read`/`do_write`, bookmarks
 precedent).
 
-- [ ] 1.1 Create the migration folder
+- [x] 1.1 Create the migration folder
       `backend/migrations/appdata/2026-06-27-131935_create_gloss_prompts_history/`
       with `up.sql` (CREATE TABLE + `CREATE INDEX IF NOT EXISTS
       idx_gloss_prompts_history_type_updated ON gloss_prompts_history(item_type,
       updated_at)`) and `down.sql` (DROP TABLE), following the bookmarks migration.
-- [ ] 1.2 Add the `gloss_prompts_history` `diesel::table!` block to
+- [x] 1.2 Add the `gloss_prompts_history` `diesel::table!` block to
       `backend/src/db/appdata_schema.rs`.
-- [ ] 1.3 Add `GlossPromptsHistory` (Queryable/Selectable) and
+- [x] 1.3 Add `GlossPromptsHistory` (Queryable/Selectable) and
       `NewGlossPromptsHistory<'a>` (Insertable) structs to
       `backend/src/db/appdata_models.rs`.
-- [ ] 1.4 Add `get_history_for_type(item_type) -> Vec<GlossPromptsHistory>`
+- [x] 1.4 Add `get_history_for_type(item_type) -> Vec<GlossPromptsHistory>`
       (ordered `updated_at DESC`) to `backend/src/db/appdata.rs`.
-- [ ] 1.5 Add `save_new_history(item_type, data_json) -> Result<i32>` (INSERT,
+- [x] 1.5 Add `save_new_history(item_type, data_json) -> Result<i32>` (INSERT,
       sets `created_at`/`updated_at`, returns new id) and
       `update_history(id, data_json) -> Result<()>` (UPDATE `data_json` +
       `updated_at`).
-- [ ] 1.6 Add `delete_history_item(id) -> Result<()>` and
+- [x] 1.6 Add `delete_history_item(id) -> Result<()>` and
       `clear_history(item_type) -> Result<()>`.
-- [ ] 1.7 **Do NOT add a per-save `ANALYZE`.** `DatabaseHandle::analyze`
+- [x] 1.7 **Do NOT add a per-save `ANALYZE`.** `DatabaseHandle::analyze`
       (`backend/src/db/mod.rs:116`) runs a full-DB `ANALYZE;` over all appdata
       tables — wasteful per 60 s save and unnecessary here: the only query is a
       single-table equality + order served by the `(item_type, updated_at)` index
       (the slow-query bug in `docs/user-data-and-sqlite-analyze.md` was a
       multi-table join, not this shape). Document the decision (code comment +
       docs in 7.5) rather than calling `analyze`.
-- [ ] 1.8 Apply the migration to the dev DB and confirm the backend compiles
+- [x] 1.8 Apply the migration to the dev DB and confirm the backend compiles
       (`cd backend && cargo build`); add CRUD tests in task 7.0.
 
 ### 2.0 Rust bridge: shared `item_type` history functions (PRD reqs 5, 10a, 17-backend)

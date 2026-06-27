@@ -1878,5 +1878,94 @@ impl AppdataDbHandle {
             }
         }
     }
+
+    // Gloss / Prompts history CRUD.
+    //
+    // NOTE: intentionally NO per-save `ANALYZE` here. `DatabaseHandle::analyze`
+    // runs a full-DB ANALYZE over all appdata tables, which would be wasteful on
+    // every 60s autosave. It is also unnecessary: the only query is a
+    // single-table equality + order (`WHERE item_type = ? ORDER BY updated_at
+    // DESC`) fully served by the `(item_type, updated_at)` index, which SQLite
+    // plans correctly without stats. See
+    // docs/user-data-and-sqlite-analyze.md (the slow-query case there was a
+    // multi-table join, not this shape).
+
+    pub fn get_history_for_type(&self, item_type_param: HistoryItemType) -> Vec<GlossPromptsHistory> {
+        use crate::db::appdata_schema::gloss_prompts_history::dsl::*;
+
+        let result = self.do_read(|db_conn| {
+            gloss_prompts_history
+                .filter(item_type.eq(item_type_param.as_str()))
+                .order(updated_at.desc())
+                .select(GlossPromptsHistory::as_select())
+                .load(db_conn)
+        });
+
+        match result {
+            Ok(items) => items,
+            Err(e) => {
+                error(&format!("get_history_for_type(): {}", e));
+                Vec::new()
+            }
+        }
+    }
+
+    pub fn save_new_history(&self, item_type_param: HistoryItemType, data_json_param: &str) -> Result<i32> {
+        use crate::db::appdata_schema::gloss_prompts_history::dsl::*;
+
+        let now = chrono::Utc::now().naive_utc();
+        let item = NewGlossPromptsHistory {
+            item_type: item_type_param.as_str(),
+            data_json: data_json_param,
+            created_at: Some(now),
+            updated_at: Some(now),
+        };
+
+        self.do_write(|db_conn| {
+            diesel::insert_into(gloss_prompts_history)
+                .values(&item)
+                .execute(db_conn)?;
+
+            gloss_prompts_history
+                .order(id.desc())
+                .select(id)
+                .first::<i32>(db_conn)
+        })
+    }
+
+    pub fn update_history(&self, id_param: i32, data_json_param: &str) -> Result<()> {
+        use crate::db::appdata_schema::gloss_prompts_history::dsl::*;
+
+        let now = chrono::Utc::now().naive_utc();
+        self.do_write(|db_conn| {
+            diesel::update(gloss_prompts_history.find(id_param))
+                .set((
+                    data_json.eq(data_json_param),
+                    updated_at.eq(Some(now)),
+                ))
+                .execute(db_conn)
+                .map(|_| ())
+        })
+    }
+
+    pub fn delete_history_item(&self, id_param: i32) -> Result<()> {
+        use crate::db::appdata_schema::gloss_prompts_history::dsl::*;
+
+        self.do_write(|db_conn| {
+            diesel::delete(gloss_prompts_history.find(id_param))
+                .execute(db_conn)
+                .map(|_| ())
+        })
+    }
+
+    pub fn clear_history(&self, item_type_param: HistoryItemType) -> Result<()> {
+        use crate::db::appdata_schema::gloss_prompts_history::dsl::*;
+
+        self.do_write(|db_conn| {
+            diesel::delete(gloss_prompts_history.filter(item_type.eq(item_type_param.as_str())))
+                .execute(db_conn)
+                .map(|_| ())
+        })
+    }
 }
 
